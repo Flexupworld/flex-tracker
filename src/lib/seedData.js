@@ -184,3 +184,31 @@ export const SEED_LIVRAISONS = [
   { facture:'FAE2600316', date_livraison:'2026-03-01', transport:'UPS Express Saver', entite:'CS_SL', fournisseur:'F.one', nb_lignes:73, qte_totale:442, montant_ht:91302.85, saison:'SS26' },
   { facture:'FAE2600339', date_livraison:'2026-03-02', transport:'Dachser DAP Corralejo', entite:'CS_SL', fournisseur:'F.one', nb_lignes:20, qte_totale:66, montant_ht:34187.12, saison:'SS26' },
 ]
+
+// ── BC-2026-007 — Nouvelle précommande 17/03/2026 ─────────────
+// PLANE SUSHI (sets complets) — livraison juin 2026
+,{ bc:'BC-2026-007', ref:'77267-0871', fournisseur:'F.one', entite:'CS_SL', produit:'PLANE SUSHI 620', taille:'Carving 123 XS', categorie:'Wing / Foil', qte_commandee:3, qte_livree:0, prix_u:650.60, livraison_prevue:'2026-09-01' }
+,{ bc:'BC-2026-007', ref:'77267-0872', fournisseur:'F.one', entite:'CS_SL', produit:'PLANE SUSHI 680', taille:'Carving 123 XS', categorie:'Wing / Foil', qte_commandee:3, qte_livree:0, prix_u:656.16, livraison_prevue:'2026-09-01' }
+,{ bc:'BC-2026-007', ref:'77267-0873', fournisseur:'F.one', entite:'CS_SL', produit:'PLANE SUSHI 740', taille:'Carving 138 XS', categorie:'Wing / Foil', qte_commandee:4, qte_livree:0, prix_u:667.29, livraison_prevue:'2026-09-01' }
+,{ bc:'BC-2026-007', ref:'77267-0874', fournisseur:'F.one', entite:'CS_SL', produit:'PLANE SUSHI 820', taille:'Carving 138 XS', categorie:'Wing / Foil', qte_commandee:4, qte_livree:0, prix_u:689.56, livraison_prevue:'2026-09-01' }
+,{ bc:'BC-2026-007', ref:'77267-0875', fournisseur:'F.one', entite:'CS_SL', produit:'PLANE SUSHI 920', taille:'Carving 158 XS', categorie:'Wing / Foil', qte_commandee:4, qte_livree:0, prix_u:717.38, livraison_prevue:'2026-09-01' }
+,{ bc:'BC-2026-007', ref:'77267-0876', fournisseur:'F.one', entite:'CS_SL', produit:'PLANE SUSHI 1020', taille:'Carving 158 XS', categorie:'Wing / Foil', qte_commandee:4, qte_livree:0, prix_u:739.64, livraison_prevue:'2026-09-01' }
+// TAILS
+,{ bc:'BC-2026-007', ref:'77267-0300', fournisseur:'F.one', entite:'CS_SL', produit:'TAIL CARVING 123 XS', taille:'', categorie:'Wing / Foil', qte_commandee:3, qte_livree:0, prix_u:189.22, livraison_prevue:'2026-09-01' }
+,{ bc:'BC-2026-007', ref:'77267-0333', fournisseur:'F.one', entite:'CS_SL', produit:'TAIL DW COMP 125 XS', taille:'', categorie:'Wing / Foil', qte_commandee:4, qte_livree:0, prix_u:217.05, livraison_prevue:'2026-09-01' }
+// PLUME K-WING 6.0 (toutes couleurs confondues)
+,{ bc:'BC-2026-007', ref:'77251-1201', fournisseur:'F.one', entite:'CS_SL', produit:'PLUME K-WING', taille:'6.0', categorie:'Wing / Foil', qte_commandee:3, qte_livree:0, prix_u:551.49, livraison_prevue:'2026-09-01' }
+// QUEST — Pocket Wing (toutes couleurs confondues par taille)
+,{ bc:'BC-2026-007', ref:'77261-2002A', fournisseur:'F.one', entite:'CS_SL', produit:'QUEST', taille:'3.0 M²', categorie:'Wing / Foil', qte_commandee:6, qte_livree:0, prix_u:455.49, livraison_prevue:'2026-09-01' }
+,{ bc:'BC-2026-007', ref:'77261-2002A', fournisseur:'F.one', entite:'CS_SL', produit:'QUEST', taille:'3.5 M²', categorie:'Wing / Foil', qte_commandee:6, qte_livree:0, prix_u:479.49, livraison_prevue:'2026-09-01' }
+,{ bc:'BC-2026-007', ref:'77261-2002A', fournisseur:'F.one', entite:'CS_SL', produit:'QUEST', taille:'4.0 M²', categorie:'Wing / Foil', qte_commandee:6, qte_livree:0, prix_u:503.49, livraison_prevue:'2026-09-01' }
+,{ bc:'BC-2026-007', ref:'77261-2002A', fournisseur:'F.one', entite:'CS_SL', produit:'QUEST', taille:'4.5 M²', categorie:'Wing / Foil', qte_commandee:6, qte_livree:0, prix_u:527.49, livraison_prevue:'2026-09-01' }
+,{ bc:'BC-2026-007', ref:'77261-2002A', fournisseur:'F.one', entite:'CS_SL', produit:'QUEST', taille:'5.0 M²', categorie:'Wing / Foil', qte_commandee:6, qte_livree:0, prix_u:551.49, livraison_prevue:'2026-09-01' }
+,{ bc:'BC-2026-007', ref:'77261-2002A', fournisseur:'F.one', entite:'CS_SL', produit:'QUEST', taille:'6.0 M²', categorie:'Wing / Foil', qte_commandee:4, qte_livree:0, prix_u:575.49, livraison_prevue:'2026-09-01' }
+// FRIGATE 2 — Pocket Wing
+,{ bc:'BC-2026-007', ref:'77261-2001A', fournisseur:'F.one', entite:'CS_SL', produit:'FRIGATE 2', taille:'3.0 M²', categorie:'Wing / Foil', qte_commandee:3, qte_livree:0, prix_u:503.49, livraison_prevue:'2026-09-01' }
+,{ bc:'BC-2026-007', ref:'77261-2001A', fournisseur:'F.one', entite:'CS_SL', produit:'FRIGATE 2', taille:'3.5 M²', categorie:'Wing / Foil', qte_commandee:3, qte_livree:0, prix_u:527.49, livraison_prevue:'2026-09-01' }
+,{ bc:'BC-2026-007', ref:'77261-2001A', fournisseur:'F.one', entite:'CS_SL', produit:'FRIGATE 2', taille:'4.0 M²', categorie:'Wing / Foil', qte_commandee:3, qte_livree:0, prix_u:551.49, livraison_prevue:'2026-09-01' }
+,{ bc:'BC-2026-007', ref:'77261-2001A', fournisseur:'F.one', entite:'CS_SL', produit:'FRIGATE 2', taille:'4.5 M²', categorie:'Wing / Foil', qte_commandee:3, qte_livree:0, prix_u:575.49, livraison_prevue:'2026-09-01' }
+,{ bc:'BC-2026-007', ref:'77261-2001A', fournisseur:'F.one', entite:'CS_SL', produit:'FRIGATE 2', taille:'5.5 M²', categorie:'Wing / Foil', qte_commandee:3, qte_livree:0, prix_u:599.49, livraison_prevue:'2026-09-01' }
+,{ bc:'BC-2026-007', ref:'77261-2001A', fournisseur:'F.one', entite:'CS_SL', produit:'FRIGATE 2', taille:'6.5 M²', categorie:'Wing / Foil', qte_commandee:3, qte_livree:0, prix_u:647.48, livraison_prevue:'2026-09-01' }
