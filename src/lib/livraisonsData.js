@@ -231,4 +231,14 @@ export const ENGAGEMENTS = [
   { facture:'PLE2600580', ref:'77268-1403', produit:'ROCKET FREE DOWNWIND', taille:"7'0", qte:1, statut:'Proformé' },
   { facture:'PLE2600580', ref:'77268-1403', produit:'ROCKET FREE DOWNWIND', taille:"7'4", qte:1, statut:'Proformé' },
   { facture:'PLE2600580', ref:'77268-1403', produit:'ROCKET FREE DOWNWIND', taille:"7'8", qte:1, statut:'Proformé' },
+
+  // PLE2600601 — PHANTOM FCT ajoutés (version mise à jour 51 029,34 €)
+  { facture:'PLE2600601', ref:'77247-0821', produit:'PLANE PHANTOM FCT 1280', taille:'', qte:7, statut:'Proformé' },
+  { facture:'PLE2600601', ref:'77247-0822', produit:'PLANE PHANTOM FCT 1480', taille:'', qte:13, statut:'Proformé' },
+  { facture:'PLE2600601', ref:'77267-0710', produit:'HM CARBON MAST 14', taille:'75cm', qte:2, statut:'Proformé' },
+
+  // PLE2600703 — QUEST partiels livraison 01/04/2026
+  { facture:'PLE2600703', ref:'77261-2002A', produit:'QUEST', taille:'3.0 M²', qte:6, statut:'Proformé' },
+  { facture:'PLE2600703', ref:'77261-2002A', produit:'QUEST', taille:'3.5 M²', qte:3, statut:'Proformé' },
+  { facture:'PLE2600703', ref:'77261-2002A', produit:'QUEST', taille:'6.0 M²', qte:2, statut:'Proformé' },
 ]
