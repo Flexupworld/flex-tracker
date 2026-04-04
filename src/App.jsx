@@ -57,6 +57,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [seeding, setSeeding] = useState(false)
   const [tab, setTab] = useState('orders')
+  const [includeBacklog, setIncludeBacklog] = useState(true)
   const [search, setSearch] = useState('')
   const [filtCat, setFiltCat] = useState('all')
   const [filtStatus, setFiltStatus] = useState('all')
@@ -122,6 +123,10 @@ export default function App() {
   const totalEnRoute = livraisons.filter(l=>l.statut==='En route'||l.statut==='En cours de vérification').reduce((s,l)=>s+(l.montant_ht||0),0)
   const totalProforma = livraisons.filter(l=>l.statut==='Proformé').reduce((s,l)=>s+(l.montant_ht||0),0)
   const totalAllLivraisons = totalFA + totalEnRoute + totalProforma
+  const totalUnitsLivrees = livraisons.reduce((s,l)=>s+(l.qte_totale||0),0)
+  const avgUnitPrice = totalUnitsLivrees>0 ? totalAllLivraisons/totalUnitsLivrees : 0
+  const backlogValue = Math.round(totalReliquat * avgUnitPrice)
+  const totalPreOrder = totalAllLivraisons + backlogValue
 
   if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',color:'#555'}}>Chargement...</div>
 
@@ -163,6 +168,7 @@ export default function App() {
           {label:'In Transit / Verification', value:`${totalEnRoute.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#f9ca24'},
           {label:'Proforma (Upcoming)', value:`${totalProforma.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#4a9eff'},
           {label:'True Remaining Backlog', value:`${(totalEnRoute+totalProforma).toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:(totalEnRoute+totalProforma)>0?'#ff4757':'#2ed573'},
+          {label:'Total Pre-Order', value:`${totalPreOrder.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#4a9eff'},
         ].map(m=>(
           <div key={m.label} style={{background:'#1c1c1c',borderRadius:10,padding:'14px 16px',border:'1px solid #222',flex:1,minWidth:150}}>
             <div style={{fontSize:11,color:'#555',marginBottom:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>{m.label}</div>
@@ -443,16 +449,16 @@ export default function App() {
                 )
               })}
               <tr style={{borderBottom:'1px solid #1a1a1a'}}>
-                <td style={{padding:'10px',fontWeight:500,color:'#ff4757'}}>Backlog (not yet invoiced)</td>
-                <td style={{padding:'10px',textAlign:'right',color:'#ff4757'}}>-</td>
-                <td style={{padding:'10px',textAlign:'right',color:'#888'}}>-</td>
-                <td style={{padding:'10px',color:'#888',fontSize:11}}>{totalReliquat.toLocaleString()} units pending</td>
+                <td style={{padding:'10px',fontWeight:500,color:'#ff4757'}}><label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}><input type='checkbox' checked={includeBacklog} onChange={e=>setIncludeBacklog(e.target.checked)} style={{cursor:'pointer'}}/> Backlog (not yet invoiced)</label></td>
+                <td style={{padding:'10px',textAlign:'right',color:'#ff4757'}}>{backlogValue.toLocaleString('fr-FR',{maximumFractionDigits:0})} €</td>
+                <td style={{padding:'10px',textAlign:'right',color:'#888'}}>{totalPreOrder>0?Math.round((backlogValue/totalPreOrder)*100):0}%</td>
+                <td style={{padding:'10px',color:'#888',fontSize:11}}>{totalReliquat.toLocaleString()} units × ~{Math.round(avgUnitPrice).toLocaleString()} €/unit</td>
               </tr>
             </tbody>
             <tfoot>
               <tr style={{borderTop:'1px solid #333'}}>
-                <td style={{padding:'12px 10px',fontWeight:600}}>TOTAL DOCUMENTED</td>
-                <td style={{padding:'12px 10px',textAlign:'right',fontWeight:600}}>{totalAllLivraisons.toLocaleString('fr-FR',{maximumFractionDigits:0})} €</td>
+                <td style={{padding:'12px 10px',fontWeight:600}}>TOTAL PRE-ORDER</td>
+                <td style={{padding:'12px 10px',textAlign:'right',fontWeight:600}}>{(totalAllLivraisons+(includeBacklog?backlogValue:0)).toLocaleString('fr-FR',{maximumFractionDigits:0})} €</td>
                 <td style={{padding:'12px 10px',textAlign:'right',fontWeight:600}}>100%</td>
                 <td/>
               </tr>
