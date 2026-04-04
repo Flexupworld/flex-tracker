@@ -349,6 +349,7 @@ export default function App() {
             </tfoot>
           </table>
         </div>
+      )}
 
       {tab==='pre-orders' && (
         <div>
