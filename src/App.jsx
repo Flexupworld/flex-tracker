@@ -5,15 +5,15 @@ import { SEED_LIVRAISONS, ENGAGEMENTS } from './lib/livraisonsData'
 import './App.css'
 
 const STATUT_LIVRAISON = {
-  'ProformÃ©':              { icon:'ð', color:'#4a9eff', bg:'#0a1a2b', border:'#102840' },
-  'En route':              { icon:'ð', color:'#ff9f43', bg:'#2b1e0a', border:'#4a3010' },
-  'En cours de vÃ©rification': { icon:'ð', color:'#f9ca24', bg:'#2b2a0a', border:'#4a4010' },
-  'RÃ©ceptionnÃ©':           { icon:'â', color:'#2ed573', bg:'#0d2b1a', border:'#1a4a2a' },
-  'Retard':                { icon:'â ï¸', color:'#ff4757', bg:'#2b0a0a', border:'#4a1010' },
+  'Proformé':              { icon:'📋', color:'#4a9eff', bg:'#0a1a2b', border:'#102840' },
+  'En route':              { icon:'🚚', color:'#ff9f43', bg:'#2b1e0a', border:'#4a3010' },
+  'En cours de vérification': { icon:'🔍', color:'#f9ca24', bg:'#2b2a0a', border:'#4a4010' },
+  'Réceptionné':           { icon:'✅', color:'#2ed573', bg:'#0d2b1a', border:'#1a4a2a' },
+  'Retard':                { icon:'⚠️', color:'#ff4757', bg:'#2b0a0a', border:'#4a1010' },
 }
 
 function Badge({ status }) {
-  const s = STATUT_LIVRAISON[status] || STATUT_LIVRAISON['ProformÃ©']
+  const s = STATUT_LIVRAISON[status] || STATUT_LIVRAISON['Proformé']
   return <span style={{ display:'inline-block', padding:'3px 9px', borderRadius:20, fontSize:11, fontWeight:500, background:s.bg, color:s.color, border:`1px solid ${s.border}`, whiteSpace:'nowrap' }}>{s.icon} {status}</span>
 }
 
@@ -27,7 +27,7 @@ function ProgressBar({ liv, eng, cmd }) {
         <div style={{ position:'absolute', left:0, top:0, height:'100%', width:`${pLiv}%`, background:'#2ed573', borderRadius:3 }} />
       </div>
       <div style={{ fontSize:10, color:'#555' }}>
-        {pLiv}% rÃ©ceptionnÃ©{pEng > pLiv ? ` Â· ${pEng}% engagÃ©` : ''}
+        {pLiv}% réceptionné{pEng > pLiv ? ` · ${pEng}% engagé` : ''}
       </div>
     </div>
   )
@@ -103,8 +103,8 @@ export default function App() {
     const matchSearch = !search || c.produit?.toLowerCase().includes(search.toLowerCase()) || c.ref?.toLowerCase().includes(search.toLowerCase()) || c.bc?.toLowerCase().includes(search.toLowerCase())
     const matchCat = filtCat === 'all' || c.categorie === filtCat
     const matchSt = filtStatut === 'all' ||
-      (filtStatut === 'SoldÃ©' && rel <= 0) ||
-      (filtStatut === 'EngagÃ©' && rel > 0 && vraiReliquat === 0) ||
+      (filtStatut === 'Soldé' && rel <= 0) ||
+      (filtStatut === 'Engagé' && rel > 0 && vraiReliquat === 0) ||
       (filtStatut === 'Partiel' && vraiReliquat > 0 && c.qte_livree > 0) ||
       (filtStatut === 'Ouvert' && vraiReliquat > 0 && c.qte_livree === 0)
     return matchSearch && matchCat && matchSt
@@ -118,17 +118,17 @@ export default function App() {
   const seenEng = new Set()
   const totalEng = filtered.reduce((s,r)=>{const k=`${r.ref}||${r.taille}`;if(seenEng.has(k))return s;seenEng.add(k);return s+(engMap[k]||0)},0)
   const totalReliquat = Math.max(0, totalCmd - totalLiv - totalEng)
-  const totalFA = livraisons.filter(l=>l.statut==='RÃ©ceptionnÃ©'||l.statut==='En cours de vÃ©rification').reduce((s,l)=>s+(l.montant_ht||0),0)
-  const totalEnRoute = livraisons.filter(l=>l.statut==='En route'||l.statut==='En cours de vÃ©rification').reduce((s,l)=>s+(l.montant_ht||0),0)
-  const totalProforma = livraisons.filter(l=>l.statut==='ProformÃ©').reduce((s,l)=>s+(l.montant_ht||0),0)
+  const totalFA = livraisons.filter(l=>l.statut==='Réceptionné'||l.statut==='En cours de vérification').reduce((s,l)=>s+(l.montant_ht||0),0)
+  const totalEnRoute = livraisons.filter(l=>l.statut==='En route'||l.statut==='En cours de vérification').reduce((s,l)=>s+(l.montant_ht||0),0)
+  const totalProforma = livraisons.filter(l=>l.statut==='Proformé').reduce((s,l)=>s+(l.montant_ht||0),0)
 
   if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',color:'#555'}}>Chargement...</div>
 
   if (commandes.length === 0) return (
     <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100vh',gap:16}}>
-      <div style={{color:'#888',fontSize:15}}>Base vide â importer les donnÃ©es SS26 ?</div>
+      <div style={{color:'#888',fontSize:15}}>Base vide — importer les données SS26 ?</div>
       <button onClick={seedDatabase} disabled={seeding} style={{background:'#e8e8e8',color:'#111',border:'none',borderRadius:8,padding:'10px 20px',fontSize:14,fontWeight:500,cursor:'pointer'}}>
-        {seeding ? 'Import en cours...' : 'â¬ Importer donnÃ©es SS26'}
+        {seeding ? 'Import en cours...' : '⬆ Importer données SS26'}
       </button>
     </div>
   )
@@ -139,18 +139,18 @@ export default function App() {
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap',gap:10}}>
         <div>
           <div style={{fontSize:20,fontWeight:500,color:'#fff'}}>Suivi commandes fournisseurs</div>
-          <div style={{fontSize:12,color:'#444',marginTop:3}}>Circular Stream SL Â· F.one Â· Saison SS26</div>
+          <div style={{fontSize:12,color:'#444',marginTop:3}}>Circular Stream SL · F.one · Saison SS26</div>
         </div>
         <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
           <select value={filtStatut} onChange={e=>setFiltStatut(e.target.value)}>
             <option value="all">Tous statuts</option>
-            <option value="SoldÃ©">SoldÃ©</option>
-            <option value="EngagÃ©">EngagÃ© (reliquat couvert)</option>
+            <option value="Soldé">Soldé</option>
+            <option value="Engagé">Engagé (reliquat couvert)</option>
             <option value="Partiel">Partiel</option>
             <option value="Ouvert">Ouvert</option>
           </select>
           <button onClick={seedDatabase} disabled={seeding} style={{background:'#222',color:'#666',border:'1px solid #333',borderRadius:8,padding:'7px 12px',fontSize:12,cursor:'pointer'}}>
-            {seeding?'...':'âº Reseed'}
+            {seeding?'...':'↺ Reseed'}
           </button>
         </div>
       </div>
@@ -158,9 +158,9 @@ export default function App() {
       {/* Metrics */}
       <div style={{display:'flex',gap:10,marginBottom:20,flexWrap:'wrap'}}>
         {[
-          {label:'FacturÃ© / vÃ©rifiÃ©', value:`${totalFA.toLocaleString('fr-FR',{maximumFractionDigits:0})} â¬`, color:'#2ed573'},
-          {label:'En route / vÃ©rification', value:`${totalEnRoute.toLocaleString('fr-FR',{maximumFractionDigits:0})} â¬`, color:'#f9ca24'},
-          {label:'ProformÃ© (Ã  venir)', value:`${totalProforma.toLocaleString('fr-FR',{maximumFractionDigits:0})} â¬`, color:'#4a9eff'},
+          {label:'Facturé / vérifié', value:`${totalFA.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#2ed573'},
+          {label:'En route / vérification', value:`${totalEnRoute.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#f9ca24'},
+          {label:'Proformé (à venir)', value:`${totalProforma.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#4a9eff'},
           {label:'Vrai reliquat restant', value:totalReliquat.toLocaleString(), color:totalReliquat>0?'#ff4757':'#2ed573'},
         ].map(m=>(
           <div key={m.label} style={{background:'#1c1c1c',borderRadius:10,padding:'14px 16px',border:'1px solid #222',flex:1,minWidth:150}}>
@@ -184,7 +184,7 @@ export default function App() {
       {tab==='commandes'&&(
         <>
           <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap'}}>
-            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher article / rÃ©f. / BC..." style={{flex:1,minWidth:200}}/>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher article / réf. / BC..." style={{flex:1,minWidth:200}}/>
           </div>
           <div style={{display:'flex',gap:5,flexWrap:'wrap',marginBottom:14}}>
             {['all',...cats].map(c=>(
@@ -196,7 +196,7 @@ export default function App() {
           <div style={{overflowX:'auto'}}>
             <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
               <thead>
-                <tr>{['','RÃ©f BC','Fournisseur','Article','CatÃ©gorie','CommandÃ©','RÃ©ceptionnÃ©','EngagÃ©','Vrai reliquat','Avancement'].map((h,i)=>(
+                <tr>{['','Réf BC','Fournisseur','Article','Catégorie','Commandé','Réceptionné','Engagé','Vrai reliquat','Avancement'].map((h,i)=>(
                   <th key={i} style={{textAlign:i>=5?'right':'left',padding:'8px 10px',color:'#444',borderBottom:'1px solid #1e1e1e',fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',whiteSpace:'nowrap'}}>{h}</th>
                 ))}</tr>
               </thead>
@@ -211,7 +211,7 @@ export default function App() {
                       style={{borderBottom:isOpen?'1px solid #2a2a2a':'1px solid #1a1a1a',cursor:hasMultiple?'pointer':'default',background:isOpen?'#181818':'transparent'}}
                       onMouseEnter={e=>{if(!isOpen)e.currentTarget.style.background='#161616'}}
                       onMouseLeave={e=>{if(!isOpen)e.currentTarget.style.background='transparent'}}>
-                      <td style={{padding:'10px 8px',width:20,color:'#444',fontSize:12}}>{hasMultiple?(isOpen?'â¾':'â¸'):''}</td>
+                      <td style={{padding:'10px 8px',width:20,color:'#444',fontSize:12}}>{hasMultiple?(isOpen?'▾':'▸'):''}</td>
                       <td style={{padding:'10px 10px'}}>
                         <div style={{fontWeight:600,color:'#fff',fontSize:13}}>{g.bc}</div>
                         <div style={{fontSize:10,color:'#444',marginTop:2}}>{g.ref}</div>
@@ -225,7 +225,7 @@ export default function App() {
                       <td style={{padding:'10px 10px'}}><span style={{fontSize:10,color:'#555',background:'#1c1c1c',border:'1px solid #2a2a2a',padding:'2px 7px',borderRadius:10}}>{g.categorie}</span></td>
                       <td style={{padding:'10px 10px',textAlign:'right'}}>{g.qte_commandee}</td>
                       <td style={{padding:'10px 10px',textAlign:'right',color:'#2ed573'}}>{g.qte_livree}</td>
-                      <td style={{padding:'10px 10px',textAlign:'right',color:'#ff9f43'}}>{g.qte_engagee||'â'}</td>
+                      <td style={{padding:'10px 10px',textAlign:'right',color:'#ff9f43'}}>{g.qte_engagee||'—'}</td>
                       <td style={{padding:'10px 10px',textAlign:'right',fontWeight:500,color:vraiRel>0?'#ff4757':'#2ed573'}}>{vraiRel}</td>
                       <td style={{padding:'10px 10px'}}><ProgressBar liv={g.qte_livree} eng={g.qte_engagee} cmd={g.qte_commandee}/></td>
                     </tr>,
@@ -237,11 +237,11 @@ export default function App() {
                           <td style={{padding:'7px 8px'}}/>
                           <td style={{padding:'7px 10px'}}/>
                           <td style={{padding:'7px 10px'}}/>
-                          <td style={{padding:'7px 10px 7px 20px'}}><div style={{fontSize:12,color:'#888'}}>â³ {r.taille||'â'}</div></td>
+                          <td style={{padding:'7px 10px 7px 20px'}}><div style={{fontSize:12,color:'#888'}}>↳ {r.taille||'—'}</div></td>
                           <td style={{padding:'7px 10px'}}/>
                           <td style={{padding:'7px 10px',textAlign:'right',fontSize:12,color:'#777'}}>{r.qte_commandee}</td>
                           <td style={{padding:'7px 10px',textAlign:'right',fontSize:12,color:'#2ed573'}}>{r.qte_livree}</td>
-                          <td style={{padding:'7px 10px',textAlign:'right',fontSize:12,color:'#ff9f43'}}>{rEng||'â'}</td>
+                          <td style={{padding:'7px 10px',textAlign:'right',fontSize:12,color:'#ff9f43'}}>{rEng||'—'}</td>
                           <td style={{padding:'7px 10px',textAlign:'right',fontSize:12,fontWeight:500,color:rRel>0?'#ff4757':'#2ed573'}}>{rRel}</td>
                           <td style={{padding:'7px 10px'}}><ProgressBar liv={r.qte_livree} eng={rEng} cmd={r.qte_commandee}/></td>
                         </tr>
@@ -260,7 +260,7 @@ export default function App() {
         <div style={{overflowX:'auto'}}>
           <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
             <thead>
-              <tr>{['RÃ©f','Type','Date prÃ©vu','EntitÃ©','QtÃ©','Montant HT','Statut','Notes'].map((h,i)=>(
+              <tr>{['Réf','Type','Date prévu','Entité','Qté','Montant HT','Statut','Notes'].map((h,i)=>(
                 <th key={i} style={{textAlign:i>=4&&i<=5?'right':'left',padding:'8px 10px',color:'#444',borderBottom:'1px solid #1e1e1e',fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',whiteSpace:'nowrap'}}>{h}</th>
               ))}</tr>
             </thead>
@@ -269,10 +269,10 @@ export default function App() {
                 <tr key={i} style={{borderBottom:'1px solid #1a1a1a'}}>
                   <td style={{padding:'12px 10px',fontWeight:600,color:'#fff',fontFamily:'monospace',fontSize:12}}>{l.facture}</td>
                   <td style={{padding:'12px 10px',fontSize:11,color:'#666'}}>{l.type}</td>
-                  <td style={{padding:'12px 10px',fontSize:11,color:'#888'}}>{l.date_livraison?new Date(l.date_livraison).toLocaleDateString('fr-FR'):'â'}</td>
+                  <td style={{padding:'12px 10px',fontSize:11,color:'#888'}}>{l.date_livraison?new Date(l.date_livraison).toLocaleDateString('fr-FR'):'—'}</td>
                   <td style={{padding:'12px 10px',fontSize:11,color:'#666'}}>{l.entite}</td>
                   <td style={{padding:'12px 10px',textAlign:'right'}}>{l.qte_totale?.toLocaleString()}</td>
-                  <td style={{padding:'12px 10px',textAlign:'right',color:'#ddd'}}>{l.montant_ht?.toLocaleString('fr-FR',{minimumFractionDigits:2})} â¬</td>
+                  <td style={{padding:'12px 10px',textAlign:'right',color:'#ddd'}}>{l.montant_ht?.toLocaleString('fr-FR',{minimumFractionDigits:2})} €</td>
                   <td style={{padding:'12px 10px'}}><Badge status={l.statut}/></td>
                   <td style={{padding:'12px 10px',fontSize:11,color:'#555',maxWidth:200}}>{l.notes}</td>
                 </tr>
@@ -282,7 +282,7 @@ export default function App() {
               <tr style={{borderTop:'1px solid #333'}}>
                 <td colSpan={4} style={{padding:'12px 10px',fontSize:11,color:'#555'}}>Total {livraisons.length} mouvements</td>
                 <td style={{padding:'12px 10px',textAlign:'right',color:'#ddd'}}>{livraisons.reduce((s,l)=>s+(l.qte_totale||0),0).toLocaleString()}</td>
-                <td style={{padding:'12px 10px',textAlign:'right',color:'#ff9f43'}}>{livraisons.reduce((s,l)=>s+(l.montant_ht||0),0).toLocaleString('fr-FR',{minimumFractionDigits:2})} â¬</td>
+                <td style={{padding:'12px 10px',textAlign:'right',color:'#ff9f43'}}>{livraisons.reduce((s,l)=>s+(l.montant_ht||0),0).toLocaleString('fr-FR',{minimumFractionDigits:2})} €</td>
                 <td colSpan={2}/>
               </tr>
             </tfoot>
@@ -295,7 +295,7 @@ export default function App() {
         <div style={{overflowX:'auto'}}>
           <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
             <thead>
-              <tr>{['','RÃ©f BC','Article','CatÃ©gorie','CommandÃ©','RÃ©ceptionnÃ©','EngagÃ©','Vrai reliquat'].map((h,i)=>(
+              <tr>{['','Réf BC','Article','Catégorie','Commandé','Réceptionné','Engagé','Vrai reliquat'].map((h,i)=>(
                 <th key={i} style={{textAlign:i>=4?'right':'left',padding:'8px 10px',color:'#444',borderBottom:'1px solid #1e1e1e',fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',whiteSpace:'nowrap'}}>{h}</th>
               ))}</tr>
             </thead>
@@ -310,7 +310,7 @@ export default function App() {
                     style={{borderBottom:isOpen?'1px solid #2a2a2a':'1px solid #1a1a1a',cursor:hasMultiple?'pointer':'default',background:isOpen?'#181818':'transparent'}}
                     onMouseEnter={e=>{if(!isOpen)e.currentTarget.style.background='#161616'}}
                     onMouseLeave={e=>{if(!isOpen)e.currentTarget.style.background='transparent'}}>
-                    <td style={{padding:'10px 8px',width:20,color:'#444',fontSize:12}}>{hasMultiple?(isOpen?'â¾':'â¸'):''}</td>
+                    <td style={{padding:'10px 8px',width:20,color:'#444',fontSize:12}}>{hasMultiple?(isOpen?'▾':'▸'):''}</td>
                     <td style={{padding:'10px 10px'}}>
                       <div style={{fontWeight:600,color:'#fff',fontSize:13}}>{g.bc}</div>
                       <div style={{fontSize:10,color:'#444',marginTop:2}}>{g.ref}</div>
@@ -319,7 +319,7 @@ export default function App() {
                     <td style={{padding:'10px 10px'}}><span style={{fontSize:10,color:'#555',background:'#1c1c1c',border:'1px solid #2a2a2a',padding:'2px 7px',borderRadius:10}}>{g.categorie}</span></td>
                     <td style={{padding:'10px 10px',textAlign:'right'}}>{g.qte_commandee}</td>
                     <td style={{padding:'10px 10px',textAlign:'right',color:'#2ed573'}}>{g.qte_livree}</td>
-                    <td style={{padding:'10px 10px',textAlign:'right',color:'#ff9f43'}}>{g.qte_engagee||'â'}</td>
+                    <td style={{padding:'10px 10px',textAlign:'right',color:'#ff9f43'}}>{g.qte_engagee||'—'}</td>
                     <td style={{padding:'10px 10px',textAlign:'right',fontWeight:500,color:'#ff4757'}}>{vraiRel}</td>
                   </tr>,
                   ...(isOpen?g.rows.filter(r=>Math.max(0,r.qte_commandee-r.qte_livree-(engMap[`${r.ref}||${r.taille}`]||0))>0).map((r,ri)=>{
@@ -329,11 +329,11 @@ export default function App() {
                       <tr key={`${key}-${ri}`} style={{borderBottom:'1px solid #141414',background:'#141414'}}>
                         <td style={{padding:'7px 8px'}}/>
                         <td style={{padding:'7px 10px'}}/>
-                        <td style={{padding:'7px 10px 7px 20px'}}><div style={{fontSize:12,color:'#888'}}>â³ {r.taille||'â'}</div></td>
+                        <td style={{padding:'7px 10px 7px 20px'}}><div style={{fontSize:12,color:'#888'}}>↳ {r.taille||'—'}</div></td>
                         <td style={{padding:'7px 10px'}}/>
                         <td style={{padding:'7px 10px',textAlign:'right',fontSize:12,color:'#777'}}>{r.qte_commandee}</td>
                         <td style={{padding:'7px 10px',textAlign:'right',fontSize:12,color:'#2ed573'}}>{r.qte_livree}</td>
-                        <td style={{padding:'7px 10px',textAlign:'right',fontSize:12,color:'#ff9f43'}}>{rEng||'â'}</td>
+                        <td style={{padding:'7px 10px',textAlign:'right',fontSize:12,color:'#ff9f43'}}>{rEng||'—'}</td>
                         <td style={{padding:'7px 10px',textAlign:'right',fontSize:12,fontWeight:500,color:'#ff4757'}}>{rRel}</td>
                       </tr>
                     )
@@ -352,7 +352,7 @@ export default function App() {
 
       {tab==='pre-orders' && (
         <div>
-          <div style={{marginBottom:16,color:'#888',fontSize:13}}>Pre-order fulfillment by category — SS26</div>
+          <div style={{marginBottom:16,color:'#888',fontSize:13}}>Pre-order fulfillment by category - SS26</div>
           <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
             <thead>
               <tr style={{borderBottom:'1px solid #333',color:'#888'}}>
