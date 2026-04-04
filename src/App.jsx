@@ -121,6 +121,7 @@ export default function App() {
   const totalFA = livraisons.filter(l=>l.statut==='Réceptionné'||l.statut==='En cours de vérification').reduce((s,l)=>s+(l.montant_ht||0),0)
   const totalEnRoute = livraisons.filter(l=>l.statut==='En route'||l.statut==='En cours de vérification').reduce((s,l)=>s+(l.montant_ht||0),0)
   const totalProforma = livraisons.filter(l=>l.statut==='Proformé').reduce((s,l)=>s+(l.montant_ht||0),0)
+  const totalAllLivraisons = totalFA + totalEnRoute + totalProforma
 
   if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',color:'#555'}}>Chargement...</div>
 
@@ -161,7 +162,7 @@ export default function App() {
           {label:'Invoiced / Verified', value:`${totalFA.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#2ed573'},
           {label:'In Transit / Verification', value:`${totalEnRoute.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#f9ca24'},
           {label:'Proforma (Upcoming)', value:`${totalProforma.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#4a9eff'},
-          {label:'True Remaining Backlog', value:totalReliquat.toLocaleString(), color:totalReliquat>0?'#ff4757':'#2ed573'},
+          {label:'True Remaining Backlog', value:`${(totalEnRoute+totalProforma).toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:(totalEnRoute+totalProforma)>0?'#ff4757':'#2ed573'},
         ].map(m=>(
           <div key={m.label} style={{background:'#1c1c1c',borderRadius:10,padding:'14px 16px',border:'1px solid #222',flex:1,minWidth:150}}>
             <div style={{fontSize:11,color:'#555',marginBottom:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>{m.label}</div>
@@ -172,7 +173,7 @@ export default function App() {
 
       {/* Tabs */}
       <div style={{display:'flex',borderBottom:'1px solid #222',marginBottom:16}}>
-        {['orders','deliveries','backlog','pre-orders'].map(t=>(
+        {['orders','deliveries','backlog','pre-orders','financial'].map(t=>(
           <button key={t} onClick={()=>setTab(t)} style={{padding:'9px 18px',fontSize:13,cursor:'pointer',background:'none',border:'none',borderBottom:tab===t?'2px solid #fff':'2px solid transparent',color:tab===t?'#fff':'#555',textTransform:'capitalize'}}>
             {t}
             {t==='livraisons'&&<span style={{display:'inline-block',width:6,height:6,background:'#ff9f43',borderRadius:'50%',marginLeft:5,verticalAlign:'middle'}}/>}
@@ -407,6 +408,56 @@ export default function App() {
             </tfoot>
           </table>
         </div>
+      {tab==='financial' && (
+        <div>
+          <div style={{marginBottom:16,color:'#888',fontSize:13}}>Financial summary - F-ONE SS26 order</div>
+          <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+            <thead>
+              <tr style={{borderBottom:'1px solid #333',color:'#888'}}>
+                <th style={{textAlign:'left',padding:'8px 10px'}}>Line item</th>
+                <th style={{textAlign:'right',padding:'8px 10px'}}>Amount</th>
+                <th style={{textAlign:'right',padding:'8px 10px'}}>Share</th>
+                <th style={{padding:'8px 10px',minWidth:160}}>Progress</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                {label:'Invoiced / Received',amount:totalFA,color:'#2ed573'},
+                {label:'In Transit',amount:totalEnRoute,color:'#ff9f43'},
+                {label:'Proforma (Upcoming)',amount:totalProforma,color:'#4a9eff'},
+              ].map(row => {
+                const pct = totalAllLivraisons > 0 ? Math.round((row.amount/totalAllLivraisons)*100) : 0
+                return (
+                  <tr key={row.label} style={{borderBottom:'1px solid #1a1a1a'}}>
+                    <td style={{padding:'10px',fontWeight:500}}>{row.label}</td>
+                    <td style={{padding:'10px',textAlign:'right',color:row.color}}>{row.amount.toLocaleString('fr-FR',{maximumFractionDigits:0})} €</td>
+                    <td style={{padding:'10px',textAlign:'right',color:'#888'}}>{pct}%</td>
+                    <td style={{padding:'10px'}}>
+                      <div style={{background:'#222',borderRadius:4,height:8,overflow:'hidden'}}>
+                        <div style={{background:row.color,height:'100%',width:pct+'%'}}/>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+              <tr style={{borderBottom:'1px solid #1a1a1a'}}>
+                <td style={{padding:'10px',fontWeight:500,color:'#ff4757'}}>Backlog (not yet invoiced)</td>
+                <td style={{padding:'10px',textAlign:'right',color:'#ff4757'}}>-</td>
+                <td style={{padding:'10px',textAlign:'right',color:'#888'}}>-</td>
+                <td style={{padding:'10px',color:'#888',fontSize:11}}>{totalReliquat.toLocaleString()} units pending</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr style={{borderTop:'1px solid #333'}}>
+                <td style={{padding:'12px 10px',fontWeight:600}}>TOTAL DOCUMENTED</td>
+                <td style={{padding:'12px 10px',textAlign:'right',fontWeight:600}}>{totalAllLivraisons.toLocaleString('fr-FR',{maximumFractionDigits:0})} €</td>
+                <td style={{padding:'12px 10px',textAlign:'right',fontWeight:600}}>100%</td>
+                <td/>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
       )}
     </div>
   )
