@@ -408,6 +408,8 @@ export default function App() {
             </tfoot>
           </table>
         </div>
+      )}
+
       {tab==='financial' && (
         <div>
           <div style={{marginBottom:16,color:'#888',fontSize:13}}>Financial summary - F-ONE SS26 order</div>
