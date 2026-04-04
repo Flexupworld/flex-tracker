@@ -59,7 +59,7 @@ export default function App() {
   const [tab, setTab] = useState('orders')
   const [search, setSearch] = useState('')
   const [filtCat, setFiltCat] = useState('all')
-  const [filtStatut, setFiltStatut] = useState('all')
+  const [filtStatus, setFiltStatus] = useState('all')
   const [expanded, setExpanded] = useState(new Set())
 
   // Build engagement map: ref||taille -> total engaged qty
@@ -102,11 +102,11 @@ export default function App() {
     const vraiReliquat = Math.max(0, rel - eng)
     const matchSearch = !search || c.produit?.toLowerCase().includes(search.toLowerCase()) || c.ref?.toLowerCase().includes(search.toLowerCase()) || c.bc?.toLowerCase().includes(search.toLowerCase())
     const matchCat = filtCat === 'all' || c.categorie === filtCat
-    const matchSt = filtStatut === 'all' ||
-      (filtStatut === 'Soldé' && rel <= 0) ||
-      (filtStatut === 'In Transit' && rel > 0 && vraiReliquat === 0) ||
-      (filtStatut === 'Partiel' && vraiReliquat > 0 && c.qte_livree > 0) ||
-      (filtStatut === 'Ouvert' && vraiReliquat > 0 && c.qte_livree === 0)
+    const matchSt = filtStatus === 'all' ||
+      (filtStatus === 'Soldé' && rel <= 0) ||
+      (filtStatus === 'In Transit' && rel > 0 && vraiReliquat === 0) ||
+      (filtStatus === 'Partiel' && vraiReliquat > 0 && c.qte_livree > 0) ||
+      (filtStatus === 'Ouvert' && vraiReliquat > 0 && c.qte_livree === 0)
     return matchSearch && matchCat && matchSt
   })
 
@@ -118,7 +118,7 @@ export default function App() {
   const seenEng = new Set()
   const totalEng = filtered.reduce((s,r)=>{const k=`${r.ref}||${r.taille}`;if(seenEng.has(k))return s;seenEng.add(k);return s+(engMap[k]||0)},0)
   const totalReliquat = Math.max(0, totalCmd - totalLiv - totalEng)
-  const totalFA = livraisons.filter(l=>l.statut==='Received'||l.statut==='En cours de vérification').reduce((s,l)=>s+(l.montant_ht||0),0)
+  const totalFA = livraisons.filter(l=>l.statut==='Réceptionné'||l.statut==='En cours de vérification').reduce((s,l)=>s+(l.montant_ht||0),0)
   const totalEnRoute = livraisons.filter(l=>l.statut==='En route'||l.statut==='En cours de vérification').reduce((s,l)=>s+(l.montant_ht||0),0)
   const totalProforma = livraisons.filter(l=>l.statut==='Proformé').reduce((s,l)=>s+(l.montant_ht||0),0)
 
@@ -142,7 +142,7 @@ export default function App() {
           <div style={{fontSize:12,color:'#444',marginTop:3}}>Circular Stream SL · F.one · Season SS26</div>
         </div>
         <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
-          <select value={filtStatut} onChange={e=>setFiltStatut(e.target.value)}>
+          <select value={filtStatus} onChange={e=>setFiltStatus(e.target.value)}>
             <option value="all">All statuses</option>
             <option value="Soldé">Soldé</option>
             <option value="In Transit">In Transit (reliquat couvert)</option>
@@ -184,7 +184,7 @@ export default function App() {
       {tab==='orders'&&(
         <>
           <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap'}}>
-            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher article / ref. / PO..." style={{flex:1,minWidth:200}}/>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search item / ref. / PO..." style={{flex:1,minWidth:200}}/>
           </div>
           <div style={{display:'flex',gap:5,flexWrap:'wrap',marginBottom:14}}>
             {['all',...cats].map(c=>(
@@ -196,7 +196,7 @@ export default function App() {
           <div style={{overflowX:'auto'}}>
             <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
               <thead>
-                <tr>{['','PO Ref','Supplier','Article','Catégorie','Ordered','Received','In Transit','True Backlog','Progress'].map((h,i)=>(
+                <tr>{['','PO Ref','Supplier','Item','Category','Ordered','Received','In Transit','True Backlog','Progress'].map((h,i)=>(
                   <th key={i} style={{textAlign:i>=5?'right':'left',padding:'8px 10px',color:'#444',borderBottom:'1px solid #1e1e1e',fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',whiteSpace:'nowrap'}}>{h}</th>
                 ))}</tr>
               </thead>
@@ -260,7 +260,7 @@ export default function App() {
         <div style={{overflowX:'auto'}}>
           <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
             <thead>
-              <tr>{['Réf','Type','Date prévu','Entité','Qté','Montant HT','Statut','Notes'].map((h,i)=>(
+              <tr>{['Réf','Type','Date prévu','Entité','Qté','Montant HT','Status','Notes'].map((h,i)=>(
                 <th key={i} style={{textAlign:i>=4&&i<=5?'right':'left',padding:'8px 10px',color:'#444',borderBottom:'1px solid #1e1e1e',fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',whiteSpace:'nowrap'}}>{h}</th>
               ))}</tr>
             </thead>
@@ -295,7 +295,7 @@ export default function App() {
         <div style={{overflowX:'auto'}}>
           <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
             <thead>
-              <tr>{['','PO Ref','Article','Catégorie','Ordered','Received','In Transit','True Backlog'].map((h,i)=>(
+              <tr>{['','PO Ref','Item','Category','Ordered','Received','In Transit','True Backlog'].map((h,i)=>(
                 <th key={i} style={{textAlign:i>=4?'right':'left',padding:'8px 10px',color:'#444',borderBottom:'1px solid #1e1e1e',fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',whiteSpace:'nowrap'}}>{h}</th>
               ))}</tr>
             </thead>
