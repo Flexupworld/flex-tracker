@@ -8,7 +8,7 @@ const STATUT_LIVRAISON = {
   'Proformé':              { icon:'📋', color:'#4a9eff', bg:'#0a1a2b', border:'#102840' },
   'En route':              { icon:'🚚', color:'#ff9f43', bg:'#2b1e0a', border:'#4a3010' },
   'En cours de vérification': { icon:'🔍', color:'#f9ca24', bg:'#2b2a0a', border:'#4a4010' },
-  'Réceptionné':           { icon:'✅', color:'#2ed573', bg:'#0d2b1a', border:'#1a4a2a' },
+  'Received':           { icon:'✅', color:'#2ed573', bg:'#0d2b1a', border:'#1a4a2a' },
   'Retard':                { icon:'⚠️', color:'#ff4757', bg:'#2b0a0a', border:'#4a1010' },
 }
 
@@ -27,7 +27,7 @@ function ProgressBar({ liv, eng, cmd }) {
         <div style={{ position:'absolute', left:0, top:0, height:'100%', width:`${pLiv}%`, background:'#2ed573', borderRadius:3 }} />
       </div>
       <div style={{ fontSize:10, color:'#555' }}>
-        {pLiv}% réceptionné{pEng > pLiv ? ` · ${pEng}% engagé` : ''}
+        {pLiv}% received{pEng > pLiv ? ` · ${pEng}% engagé` : ''}
       </div>
     </div>
   )
@@ -56,7 +56,7 @@ export default function App() {
   const [livraisons, setLivraisons] = useState([])
   const [loading, setLoading] = useState(true)
   const [seeding, setSeeding] = useState(false)
-  const [tab, setTab] = useState('commandes')
+  const [tab, setTab] = useState('orders')
   const [search, setSearch] = useState('')
   const [filtCat, setFiltCat] = useState('all')
   const [filtStatut, setFiltStatut] = useState('all')
@@ -104,7 +104,7 @@ export default function App() {
     const matchCat = filtCat === 'all' || c.categorie === filtCat
     const matchSt = filtStatut === 'all' ||
       (filtStatut === 'Soldé' && rel <= 0) ||
-      (filtStatut === 'Engagé' && rel > 0 && vraiReliquat === 0) ||
+      (filtStatut === 'In Transit' && rel > 0 && vraiReliquat === 0) ||
       (filtStatut === 'Partiel' && vraiReliquat > 0 && c.qte_livree > 0) ||
       (filtStatut === 'Ouvert' && vraiReliquat > 0 && c.qte_livree === 0)
     return matchSearch && matchCat && matchSt
@@ -118,7 +118,7 @@ export default function App() {
   const seenEng = new Set()
   const totalEng = filtered.reduce((s,r)=>{const k=`${r.ref}||${r.taille}`;if(seenEng.has(k))return s;seenEng.add(k);return s+(engMap[k]||0)},0)
   const totalReliquat = Math.max(0, totalCmd - totalLiv - totalEng)
-  const totalFA = livraisons.filter(l=>l.statut==='Réceptionné'||l.statut==='En cours de vérification').reduce((s,l)=>s+(l.montant_ht||0),0)
+  const totalFA = livraisons.filter(l=>l.statut==='Received'||l.statut==='En cours de vérification').reduce((s,l)=>s+(l.montant_ht||0),0)
   const totalEnRoute = livraisons.filter(l=>l.statut==='En route'||l.statut==='En cours de vérification').reduce((s,l)=>s+(l.montant_ht||0),0)
   const totalProforma = livraisons.filter(l=>l.statut==='Proformé').reduce((s,l)=>s+(l.montant_ht||0),0)
 
@@ -138,14 +138,14 @@ export default function App() {
       {/* Header */}
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap',gap:10}}>
         <div>
-          <div style={{fontSize:20,fontWeight:500,color:'#fff'}}>Suivi commandes fournisseurs</div>
-          <div style={{fontSize:12,color:'#444',marginTop:3}}>Circular Stream SL · F.one · Saison SS26</div>
+          <div style={{fontSize:20,fontWeight:500,color:'#fff'}}>Supplier Order Tracking</div>
+          <div style={{fontSize:12,color:'#444',marginTop:3}}>Circular Stream SL · F.one · Season SS26</div>
         </div>
         <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
           <select value={filtStatut} onChange={e=>setFiltStatut(e.target.value)}>
-            <option value="all">Tous statuts</option>
+            <option value="all">All statuses</option>
             <option value="Soldé">Soldé</option>
-            <option value="Engagé">Engagé (reliquat couvert)</option>
+            <option value="In Transit">In Transit (reliquat couvert)</option>
             <option value="Partiel">Partiel</option>
             <option value="Ouvert">Ouvert</option>
           </select>
@@ -158,10 +158,10 @@ export default function App() {
       {/* Metrics */}
       <div style={{display:'flex',gap:10,marginBottom:20,flexWrap:'wrap'}}>
         {[
-          {label:'Facturé / vérifié', value:`${totalFA.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#2ed573'},
-          {label:'En route / vérification', value:`${totalEnRoute.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#f9ca24'},
-          {label:'Proformé (à venir)', value:`${totalProforma.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#4a9eff'},
-          {label:'Vrai reliquat restant', value:totalReliquat.toLocaleString(), color:totalReliquat>0?'#ff4757':'#2ed573'},
+          {label:'Invoiced / Verified', value:`${totalFA.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#2ed573'},
+          {label:'In Transit / Verification', value:`${totalEnRoute.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#f9ca24'},
+          {label:'Proforma (Upcoming)', value:`${totalProforma.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#4a9eff'},
+          {label:'True Remaining Backlog', value:totalReliquat.toLocaleString(), color:totalReliquat>0?'#ff4757':'#2ed573'},
         ].map(m=>(
           <div key={m.label} style={{background:'#1c1c1c',borderRadius:10,padding:'14px 16px',border:'1px solid #222',flex:1,minWidth:150}}>
             <div style={{fontSize:11,color:'#555',marginBottom:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>{m.label}</div>
@@ -172,7 +172,7 @@ export default function App() {
 
       {/* Tabs */}
       <div style={{display:'flex',borderBottom:'1px solid #222',marginBottom:16}}>
-        {['commandes','livraisons','reliquats','pre-orders'].map(t=>(
+        {['orders','deliveries','backlog','pre-orders'].map(t=>(
           <button key={t} onClick={()=>setTab(t)} style={{padding:'9px 18px',fontSize:13,cursor:'pointer',background:'none',border:'none',borderBottom:tab===t?'2px solid #fff':'2px solid transparent',color:tab===t?'#fff':'#555',textTransform:'capitalize'}}>
             {t}
             {t==='livraisons'&&<span style={{display:'inline-block',width:6,height:6,background:'#ff9f43',borderRadius:'50%',marginLeft:5,verticalAlign:'middle'}}/>}
@@ -181,22 +181,22 @@ export default function App() {
       </div>
 
       {/* Tab Commandes */}
-      {tab==='commandes'&&(
+      {tab==='orders'&&(
         <>
           <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap'}}>
-            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher article / réf. / BC..." style={{flex:1,minWidth:200}}/>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher article / ref. / PO..." style={{flex:1,minWidth:200}}/>
           </div>
           <div style={{display:'flex',gap:5,flexWrap:'wrap',marginBottom:14}}>
             {['all',...cats].map(c=>(
               <button key={c} onClick={()=>setFiltCat(c)} style={{padding:'4px 11px',borderRadius:20,fontSize:11,cursor:'pointer',border:`1px solid ${filtCat===c?'#555':'#333'}`,background:filtCat===c?'#2a2a2a':'transparent',color:filtCat===c?'#ddd':'#555'}}>
-                {c==='all'?'Toutes':c}
+                {c==='all'?'All':c}
               </button>
             ))}
           </div>
           <div style={{overflowX:'auto'}}>
             <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
               <thead>
-                <tr>{['','Réf BC','Fournisseur','Article','Catégorie','Commandé','Réceptionné','Engagé','Vrai reliquat','Avancement'].map((h,i)=>(
+                <tr>{['','PO Ref','Supplier','Article','Catégorie','Ordered','Received','In Transit','True Backlog','Progress'].map((h,i)=>(
                   <th key={i} style={{textAlign:i>=5?'right':'left',padding:'8px 10px',color:'#444',borderBottom:'1px solid #1e1e1e',fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',whiteSpace:'nowrap'}}>{h}</th>
                 ))}</tr>
               </thead>
@@ -256,7 +256,7 @@ export default function App() {
       )}
 
       {/* Tab Livraisons */}
-      {tab==='livraisons'&&(
+      {tab==='deliveries'&&(
         <div style={{overflowX:'auto'}}>
           <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
             <thead>
@@ -290,12 +290,12 @@ export default function App() {
         </div>
       )}
 
-      {/* Tab Reliquats */}
-      {tab==='reliquats'&&(
+      {/* Tab Backlog */}
+      {tab==='backlog'&&(
         <div style={{overflowX:'auto'}}>
           <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
             <thead>
-              <tr>{['','Réf BC','Article','Catégorie','Commandé','Réceptionné','Engagé','Vrai reliquat'].map((h,i)=>(
+              <tr>{['','PO Ref','Article','Catégorie','Ordered','Received','In Transit','True Backlog'].map((h,i)=>(
                 <th key={i} style={{textAlign:i>=4?'right':'left',padding:'8px 10px',color:'#444',borderBottom:'1px solid #1e1e1e',fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',whiteSpace:'nowrap'}}>{h}</th>
               ))}</tr>
             </thead>
@@ -343,7 +343,7 @@ export default function App() {
             </tbody>
             <tfoot>
               <tr style={{borderTop:'1px solid #333'}}>
-                <td colSpan={7} style={{padding:'12px 10px',fontSize:11,color:'#555'}}>Vrai reliquat total (hors engagements)</td>
+                <td colSpan={7} style={{padding:'12px 10px',fontSize:11,color:'#555'}}>True Backlog total (hors engagements)</td>
                 <td style={{padding:'12px 10px',textAlign:'right',fontWeight:500,color:'#ff4757'}}>{totalReliquat.toLocaleString()}</td>
               </tr>
             </tfoot>
