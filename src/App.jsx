@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { supabase } from './lib/supabase'
 import { SEED_COMMANDES } from './lib/seedData'
 import { SEED_LIVRAISONS, ENGAGEMENTS } from './lib/livraisonsData'
@@ -51,6 +51,193 @@ function groupByModel(rows, engMap) {
   })
 }
 
+// ─── Modal saisie livraison ──────────────────────────────────────────────────
+function SaisieModal({ livraison, commandes, engMap, onClose, onSave }) {
+  const [search, setSearch] = useState('')
+  const [lignes, setLignes] = useState({}) // { [id]: string }
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(null)
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase()
+    return commandes.filter(c =>
+      !q ||
+      c.produit?.toLowerCase().includes(q) ||
+      c.ref?.toLowerCase().includes(q) ||
+      c.taille?.toLowerCase().includes(q)
+    )
+  }, [commandes, search])
+
+  function setQty(id, val) {
+    if (val === '' || /^\d+$/.test(val)) {
+      setLignes(prev => ({ ...prev, [id]: val }))
+    }
+  }
+
+  const totalSaisi = Object.values(lignes).reduce((s, v) => s + (parseInt(v) || 0), 0)
+  const nbLignesSaisies = Object.values(lignes).filter(v => parseInt(v) > 0).length
+
+  async function handleSave() {
+    const updates = commandes
+      .filter(c => parseInt(lignes[c.id]) > 0)
+      .map(c => ({ id: c.id, newQty: c.qte_livree + parseInt(lignes[c.id]) }))
+
+    if (updates.length === 0) { onClose(); return }
+
+    setSaving(true)
+    setSaveError(null)
+    const errors = []
+
+    for (const u of updates) {
+      const { error } = await supabase
+        .from('commandes')
+        .update({ qte_livree: u.newQty })
+        .eq('id', u.id)
+      if (error) errors.push(`ID ${u.id}: ${error.message}`)
+    }
+
+    if (errors.length > 0) {
+      setSaveError(errors.join('\n'))
+      setSaving(false)
+      return
+    }
+
+    // Auto-transition livraison from 'En route' to 'En cours de vérification'
+    if (livraison.statut === 'En route') {
+      await supabase
+        .from('livraisons')
+        .update({ statut: 'En cours de vérification' })
+        .eq('id', livraison.id)
+    }
+
+    setSaving(false)
+    onSave()
+  }
+
+  return (
+    <div style={{
+      position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:1000,
+      display:'flex', alignItems:'flex-start', justifyContent:'center',
+      padding:'40px 20px', overflowY:'auto'
+    }} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div style={{
+        background:'#141414', border:'1px solid #2a2a2a', borderRadius:12,
+        width:'100%', maxWidth:820, display:'flex', flexDirection:'column', gap:0
+      }}>
+        {/* Header */}
+        <div style={{ padding:'20px 24px', borderBottom:'1px solid #1e1e1e' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <div>
+              <div style={{ fontSize:16, fontWeight:600, color:'#fff' }}>
+                📝 Log delivery — {livraison.facture}
+              </div>
+              <div style={{ fontSize:12, color:'#555', marginTop:4 }}>
+                {livraison.entite} · {livraison.type} · {livraison.date_livraison ? new Date(livraison.date_livraison).toLocaleDateString('fr-FR') : '—'}
+                {livraison.montant_ht ? ` · ${livraison.montant_ht.toLocaleString('fr-FR', {minimumFractionDigits:2})} €` : ''}
+              </div>
+            </div>
+            <button onClick={onClose} style={{ background:'none', border:'none', color:'#555', fontSize:20, cursor:'pointer', padding:'4px 8px' }}>✕</button>
+          </div>
+          <div style={{ marginTop:12, padding:'10px 14px', background:'#1a1a1a', borderRadius:8, border:'1px solid #252525', fontSize:12, color:'#888', lineHeight:1.5 }}>
+            ⚠️ Enter quantities <strong style={{color:'#ddd'}}>received in this specific delivery</strong>.
+            These quantities will be <strong style={{color:'#ff9f43'}}>added</strong> to the current received total for each item.
+            Leave at <strong style={{color:'#ddd'}}>0</strong> for items not included in this invoice.
+          </div>
+        </div>
+
+        {/* Search */}
+        <div style={{ padding:'14px 24px', borderBottom:'1px solid #1a1a1a' }}>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Filter by item, ref., size..."
+            style={{ width:'100%', boxSizing:'border-box' }}
+            autoFocus
+          />
+        </div>
+
+        {/* Table */}
+        <div style={{ overflowY:'auto', maxHeight:'50vh' }}>
+          <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
+            <thead style={{ position:'sticky', top:0, background:'#141414', zIndex:1 }}>
+              <tr>
+                {['Item', 'Size', 'Ordered', 'Received', 'Backlog', 'Qty in this delivery'].map((h, i) => (
+                  <th key={i} style={{ textAlign: i >= 2 ? 'right' : 'left', padding:'8px 12px', color:'#444', borderBottom:'1px solid #1e1e1e', fontSize:10, textTransform:'uppercase', letterSpacing:'0.06em', whiteSpace:'nowrap' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(c => {
+                const eng = engMap[`${c.ref}||${c.taille}`] || 0
+                const reliquat = Math.max(0, c.qte_commandee - c.qte_livree - eng)
+                const val = lignes[c.id] ?? ''
+                const delta = parseInt(val) || 0
+                const hasValue = delta > 0
+                return (
+                  <tr key={c.id} style={{ borderBottom:'1px solid #1a1a1a', background: hasValue ? '#0d1f12' : 'transparent' }}>
+                    <td style={{ padding:'9px 12px', fontWeight:500, color: hasValue ? '#ddd' : '#888' }}>{c.produit}</td>
+                    <td style={{ padding:'9px 12px', color:'#666', fontSize:11 }}>{c.taille || '—'}</td>
+                    <td style={{ padding:'9px 12px', textAlign:'right', color:'#666' }}>{c.qte_commandee}</td>
+                    <td style={{ padding:'9px 12px', textAlign:'right', color:'#2ed573' }}>{c.qte_livree}</td>
+                    <td style={{ padding:'9px 12px', textAlign:'right', color: reliquat > 0 ? '#ff4757' : '#555', fontWeight: reliquat > 0 ? 500 : 400 }}>{reliquat}</td>
+                    <td style={{ padding:'6px 12px', textAlign:'right' }}>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={val}
+                        onChange={e => setQty(c.id, e.target.value)}
+                        placeholder="0"
+                        style={{
+                          width:64, textAlign:'right', padding:'5px 8px',
+                          background: hasValue ? '#1a3d22' : '#1c1c1c',
+                          border: `1px solid ${hasValue ? '#2ed57366' : '#2a2a2a'}`,
+                          borderRadius:6, color: hasValue ? '#2ed573' : '#666',
+                          fontSize:13, fontWeight: hasValue ? 600 : 400
+                        }}
+                      />
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding:'16px 24px', borderTop:'1px solid #1e1e1e', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
+          <div style={{ fontSize:12, color: nbLignesSaisies > 0 ? '#2ed573' : '#555' }}>
+            {nbLignesSaisies > 0
+              ? `✓ ${nbLignesSaisies} item${nbLignesSaisies > 1 ? 's' : ''} · ${totalSaisi} unit${totalSaisi > 1 ? 's' : ''} to save`
+              : 'No quantities entered'
+            }
+          </div>
+          {saveError && (
+            <div style={{ fontSize:11, color:'#ff4757', flex:1, textAlign:'center' }}>Error: {saveError}</div>
+          )}
+          <div style={{ display:'flex', gap:8 }}>
+            <button onClick={onClose} disabled={saving} style={{ padding:'8px 16px', borderRadius:8, border:'1px solid #333', background:'transparent', color:'#888', cursor:'pointer', fontSize:13 }}>
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              style={{
+                padding:'8px 20px', borderRadius:8, border:'none',
+                background: nbLignesSaisies > 0 ? '#1a6b35' : '#1a3d22',
+                color: nbLignesSaisies > 0 ? '#2ed573' : '#555',
+                cursor: saving ? 'wait' : 'pointer', fontSize:13, fontWeight:500
+              }}
+            >
+              {saving ? 'Saving...' : nbLignesSaisies > 0 ? `✓ Save (${totalSaisi} units)` : 'Close'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 export default function App() {
   const [commandes, setCommandes] = useState([])
   const [livraisons, setLivraisons] = useState([])
@@ -62,6 +249,7 @@ export default function App() {
   const [filtCat, setFiltCat] = useState('all')
   const [filtStatus, setFiltStatus] = useState('all')
   const [expanded, setExpanded] = useState(new Set())
+  const [saisieModal, setSaisieModal] = useState(null) // livraison object or null
 
   // Build engagement map: ref||taille -> total engaged qty
   const engMap = {}
@@ -141,6 +329,20 @@ export default function App() {
 
   return (
     <div style={{padding:'20px 28px',minHeight:'100vh'}}>
+      {/* Saisie Modal */}
+      {saisieModal && (
+        <SaisieModal
+          livraison={saisieModal}
+          commandes={commandes}
+          engMap={engMap}
+          onClose={() => setSaisieModal(null)}
+          onSave={async () => {
+            setSaisieModal(null)
+            await loadData()
+          }}
+        />
+      )}
+
       {/* Header */}
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap',gap:10}}>
         <div>
@@ -187,7 +389,7 @@ export default function App() {
         ))}
       </div>
 
-      {/* Tab Commandes */}
+      {/* Tab Orders */}
       {tab==='orders'&&(
         <>
           <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap'}}>
@@ -262,39 +464,58 @@ export default function App() {
         </>
       )}
 
-      {/* Tab Livraisons */}
+      {/* Tab Deliveries */}
       {tab==='deliveries'&&(
-        <div style={{overflowX:'auto'}}>
-          <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
-            <thead>
-              <tr>{['Réf','Type','Date prévu','Entité','Qté','Montant HT','Status','Notes'].map((h,i)=>(
-                <th key={i} style={{textAlign:i>=4&&i<=5?'right':'left',padding:'8px 10px',color:'#444',borderBottom:'1px solid #1e1e1e',fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',whiteSpace:'nowrap'}}>{h}</th>
-              ))}</tr>
-            </thead>
-            <tbody>
-              {livraisons.map((l,i)=>(
-                <tr key={i} style={{borderBottom:'1px solid #1a1a1a'}}>
-                  <td style={{padding:'12px 10px',fontWeight:600,color:'#fff',fontFamily:'monospace',fontSize:12}}>{l.facture}</td>
-                  <td style={{padding:'12px 10px',fontSize:11,color:'#666'}}>{l.type}</td>
-                  <td style={{padding:'12px 10px',fontSize:11,color:'#888'}}>{l.date_livraison?new Date(l.date_livraison).toLocaleDateString('fr-FR'):'—'}</td>
-                  <td style={{padding:'12px 10px',fontSize:11,color:'#666'}}>{l.entite}</td>
-                  <td style={{padding:'12px 10px',textAlign:'right'}}>{l.qte_totale?.toLocaleString()}</td>
-                  <td style={{padding:'12px 10px',textAlign:'right',color:'#ddd'}}>{l.montant_ht?.toLocaleString('fr-FR',{minimumFractionDigits:2})} €</td>
-                  <td style={{padding:'12px 10px'}}><Badge status={l.statut}/></td>
-                  <td style={{padding:'12px 10px',fontSize:11,color:'#555',maxWidth:200}}>{l.notes}</td>
+        <>
+          {/* Info banner */}
+          <div style={{ marginBottom:14, padding:'10px 16px', background:'#1a1a1a', borderRadius:8, border:'1px solid #252525', fontSize:12, color:'#666', display:'flex', alignItems:'center', gap:8 }}>
+            <span style={{color:'#ff9f43'}}>📝</span>
+            <span>Click <strong style={{color:'#ddd'}}>Log delivery</strong> to record the quantities received from an invoice and automatically update the received totals.</span>
+          </div>
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
+              <thead>
+                <tr>{['Réf','Type','Date prévu','Entité','Qté','Montant HT','Status','Notes',''].map((h,i)=>(
+                  <th key={i} style={{textAlign:i>=4&&i<=5?'right':'left',padding:'8px 10px',color:'#444',borderBottom:'1px solid #1e1e1e',fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',whiteSpace:'nowrap'}}>{h}</th>
+                ))}</tr>
+              </thead>
+              <tbody>
+                {livraisons.map((l,i)=>(
+                  <tr key={i} style={{borderBottom:'1px solid #1a1a1a'}}>
+                    <td style={{padding:'12px 10px',fontWeight:600,color:'#fff',fontFamily:'monospace',fontSize:12}}>{l.facture}</td>
+                    <td style={{padding:'12px 10px',fontSize:11,color:'#666'}}>{l.type}</td>
+                    <td style={{padding:'12px 10px',fontSize:11,color:'#888'}}>{l.date_livraison?new Date(l.date_livraison).toLocaleDateString('fr-FR'):'—'}</td>
+                    <td style={{padding:'12px 10px',fontSize:11,color:'#666'}}>{l.entite}</td>
+                    <td style={{padding:'12px 10px',textAlign:'right'}}>{l.qte_totale?.toLocaleString()}</td>
+                    <td style={{padding:'12px 10px',textAlign:'right',color:'#ddd'}}>{l.montant_ht?.toLocaleString('fr-FR',{minimumFractionDigits:2})} €</td>
+                    <td style={{padding:'12px 10px'}}><Badge status={l.statut}/></td>
+                    <td style={{padding:'12px 10px',fontSize:11,color:'#555',maxWidth:200}}>{l.notes}</td>
+                    <td style={{padding:'8px 10px',whiteSpace:'nowrap'}}>
+                      <button
+                        onClick={() => setSaisieModal(l)}
+                        style={{
+                          padding:'5px 12px', borderRadius:6, fontSize:11, cursor:'pointer',
+                          background:'#1a2a3a', border:'1px solid #1e3a5a', color:'#4a9eff',
+                          fontWeight:500, whiteSpace:'nowrap'
+                        }}
+                      >
+                        📝 Log delivery
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr style={{borderTop:'1px solid #333'}}>
+                  <td colSpan={4} style={{padding:'12px 10px',fontSize:11,color:'#555'}}>Total {livraisons.length} mouvements</td>
+                  <td style={{padding:'12px 10px',textAlign:'right',color:'#ddd'}}>{livraisons.reduce((s,l)=>s+(l.qte_totale||0),0).toLocaleString()}</td>
+                  <td style={{padding:'12px 10px',textAlign:'right',color:'#ff9f43'}}>{livraisons.reduce((s,l)=>s+(l.montant_ht||0),0).toLocaleString('fr-FR',{minimumFractionDigits:2})} €</td>
+                  <td colSpan={3}/>
                 </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr style={{borderTop:'1px solid #333'}}>
-                <td colSpan={4} style={{padding:'12px 10px',fontSize:11,color:'#555'}}>Total {livraisons.length} mouvements</td>
-                <td style={{padding:'12px 10px',textAlign:'right',color:'#ddd'}}>{livraisons.reduce((s,l)=>s+(l.qte_totale||0),0).toLocaleString()}</td>
-                <td style={{padding:'12px 10px',textAlign:'right',color:'#ff9f43'}}>{livraisons.reduce((s,l)=>s+(l.montant_ht||0),0).toLocaleString('fr-FR',{minimumFractionDigits:2})} €</td>
-                <td colSpan={2}/>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+              </tfoot>
+            </table>
+          </div>
+        </>
       )}
 
       {/* Tab Backlog */}
