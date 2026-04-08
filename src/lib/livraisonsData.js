@@ -17,6 +17,37 @@ export const SEED_LIVRAISONS = [
     saison: 'SS26',
     notes: 'Arrivée aujourd\'hui — vérification en cours'
   },
+  // ── PREMIÈRES LIVRAISONS DACHSER (pré-saison) ─────────────────
+  {
+    facture: 'FAE2600055',
+    type: 'Facture',
+    date_emission: '2026-01-14',
+    date_livraison: '2026-01-15',
+    transport: 'Dachser DAP Corralejo',
+    entite: 'CS_SL',
+    fournisseur: 'F.one',
+    nb_lignes: 4,
+    qte_totale: 4,
+    montant_ht: 2758.61,
+    statut: 'Réceptionné',
+    saison: 'SS26',
+    notes: 'Rocket Free Surf 5\'11 / 5\'5 / 5\'8 / 6\'2'
+  },
+  {
+    facture: 'FAE2600056',
+    type: 'Facture',
+    date_emission: '2026-01-14',
+    date_livraison: '2026-01-15',
+    transport: 'Dachser DAP Corralejo',
+    entite: 'CS_SL',
+    fournisseur: 'F.one',
+    nb_lignes: 4,
+    qte_totale: 4,
+    montant_ht: 2526.51,
+    statut: 'Réceptionné',
+    saison: 'SS26',
+    notes: 'Rocket Free Surf 6\'5 / 6\'8 — Rocket Wing Crossover 5\'6 — Rocket Free Surf Carbon 6\'11'
+  },
   // ── EN ROUTE ──────────────────────────────────────────────────
   {
     facture: 'FAE2600339',
