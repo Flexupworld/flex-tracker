@@ -17,6 +17,7 @@ export const SEED_LIVRAISONS = [
     saison: 'SS26',
     notes: 'Arrivée aujourd\'hui — vérification en cours'
   },
+  // ── EN ROUTE ──────────────────────────────────────────────────
   {
     facture: 'FAE2600339',
     type: 'Facture',
@@ -35,17 +36,17 @@ export const SEED_LIVRAISONS = [
   {
     facture: 'FAE2600481',
     type: 'Facture',
-    date_emission: '',
-    date_livraison: '',
+    date_emission: '2026-03-25',
+    date_livraison: '2026-03-06',
     transport: 'Dachser DAP Corralejo',
     entite: 'CS_SL',
     fournisseur: 'F.one',
-    nb_lignes: 1,
-    qte_totale: 1,
-    montant_ht: 0,
+    nb_lignes: 17,
+    qte_totale: 57,
+    montant_ht: 30537.41,
     statut: 'En route',
     saison: 'SS26',
-    notes: 'Rocket Free DW 7\'0 — en transit'
+    notes: 'Rocket Free Surf, Rocket Wing -S, Rocket Free DW, Rocket Wing Carbon'
   },
   // ── PROFORMAS ACCEPTÉES — EN ATTENTE D\'EXPÉDITION ─────────────
   {
@@ -63,47 +64,31 @@ export const SEED_LIVRAISONS = [
     saison: 'SS26',
     notes: 'Handles, Boom, FW, Tails, Foils, ALU Masts, Swing V5'
   },
-  {
-    facture: 'PLE2600580',
-    type: 'Proforma',
-    date_emission: '2026-03-11',
-    date_livraison: '2026-03-06',
-    transport: 'Aucun',
-    entite: 'CS_SL',
-    fournisseur: 'F.one',
-    nb_lignes: 17,
-    qte_totale: 57,
-    montant_ht: 30537.41,
-    statut: 'Proformé',
-    saison: 'SS26',
-    notes: 'Rocket Free Surf, Rocket Wing -S, Rocket Free DW, Rocket Wing Carbon'
-  },
 ]
 
-// Quantités engagées par ref+taille (proformas + en route)
+// Quantités engagées par ref+taille (factures en route + proformas)
 // Ces qtés s'ajoutent aux qte_livree pour calculer le vrai reliquat
-// FAE2600316 (reçue + vérifiée) et BLE2600219 (reçue) → retirées le 2026-04-08
+// FAE2600316 (reçue + vérifiée), BLE2600219 (reçue) → retirées le 2026-04-08
+// PLE2600580 → devenua FAE2600481 (facture émise le 2026-03-25)
 export const ENGAGEMENTS = [
-  // FAE2600481 — En route (Dachser DAP Corralejo)
+  // FAE2600481 — En route (Dachser DAP Corralejo) — émise 25/03/2026
+  { facture:'FAE2600481', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"5'2", qte:2, statut:'En route' },
+  { facture:'FAE2600481', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"5'5", qte:2, statut:'En route' },
+  { facture:'FAE2600481', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"5'8", qte:2, statut:'En route' },
+  { facture:'FAE2600481', ref:'77248-0502', produit:'ROCKET WING CARBON', taille:"4'6", qte:1, statut:'En route' },
+  { facture:'FAE2600481', ref:'77268-0601', produit:'ROCKET WING - S', taille:"5'0", qte:5, statut:'En route' },
+  { facture:'FAE2600481', ref:'77268-0601', produit:'ROCKET WING - S', taille:"5'3", qte:6, statut:'En route' },
+  { facture:'FAE2600481', ref:'77268-0601', produit:'ROCKET WING - S', taille:"5'6", qte:5, statut:'En route' },
+  { facture:'FAE2600481', ref:'77268-0601', produit:'ROCKET WING - S', taille:"5'8", qte:5, statut:'En route' },
+  { facture:'FAE2600481', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"5'11", qte:5, statut:'En route' },
+  { facture:'FAE2600481', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"6'2", qte:5, statut:'En route' },
+  { facture:'FAE2600481', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"6'5", qte:5, statut:'En route' },
+  { facture:'FAE2600481', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"6'8", qte:5, statut:'En route' },
+  { facture:'FAE2600481', ref:'77268-1403', produit:'ROCKET FREE DOWNWIND', taille:"6'4", qte:3, statut:'En route' },
+  { facture:'FAE2600481', ref:'77268-1403', produit:'ROCKET FREE DOWNWIND', taille:"6'8", qte:3, statut:'En route' },
   { facture:'FAE2600481', ref:'77268-1403', produit:'ROCKET FREE DOWNWIND', taille:"7'0", qte:1, statut:'En route' },
+  { facture:'FAE2600481', ref:'77268-1403', produit:'ROCKET FREE DOWNWIND', taille:"7'4", qte:1, statut:'En route' },
+  { facture:'FAE2600481', ref:'77268-1403', produit:'ROCKET FREE DOWNWIND', taille:"7'8", qte:1, statut:'En route' },
 
   // FAE2600339 — Tout reçu ou non en transit — retirés le 2026-04-08
-
-  // PLE2600580 — Proformé
-  { facture:'PLE2600580', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"5'2", qte:2, statut:'Proformé' },
-  { facture:'PLE2600580', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"5'5", qte:2, statut:'Proformé' },
-  { facture:'PLE2600580', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"5'8", qte:2, statut:'Proformé' },
-  { facture:'PLE2600580', ref:'77248-0502', produit:'ROCKET WING CARBON', taille:"4'6", qte:1, statut:'Proformé' },
-  { facture:'PLE2600580', ref:'77268-0601', produit:'ROCKET WING - S', taille:"5'0", qte:5, statut:'Proformé' },
-  { facture:'PLE2600580', ref:'77268-0601', produit:'ROCKET WING - S', taille:"5'3", qte:6, statut:'Proformé' },
-  { facture:'PLE2600580', ref:'77268-0601', produit:'ROCKET WING - S', taille:"5'6", qte:5, statut:'Proformé' },
-  { facture:'PLE2600580', ref:'77268-0601', produit:'ROCKET WING - S', taille:"5'8", qte:5, statut:'Proformé' },
-  { facture:'PLE2600580', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"5'11", qte:5, statut:'Proformé' },
-  { facture:'PLE2600580', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"6'2", qte:5, statut:'Proformé' },
-  { facture:'PLE2600580', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"6'5", qte:5, statut:'Proformé' },
-  { facture:'PLE2600580', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"6'8", qte:5, statut:'Proformé' },
-  { facture:'PLE2600580', ref:'77268-1403', produit:'ROCKET FREE DOWNWIND', taille:"6'4", qte:3, statut:'Proformé' },
-  { facture:'PLE2600580', ref:'77268-1403', produit:'ROCKET FREE DOWNWIND', taille:"6'8", qte:3, statut:'Proformé' },
-  { facture:'PLE2600580', ref:'77268-1403', produit:'ROCKET FREE DOWNWIND', taille:"7'4", qte:1, statut:'Proformé' },
-  { facture:'PLE2600580', ref:'77268-1403', produit:'ROCKET FREE DOWNWIND', taille:"7'8", qte:1, statut:'Proformé' },
 ]
