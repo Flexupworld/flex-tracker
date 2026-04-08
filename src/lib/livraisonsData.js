@@ -69,27 +69,14 @@ export const SEED_LIVRAISONS = [
 // Ces qtés s'ajoutent aux qte_livree pour calculer le vrai reliquat
 // FAE2600316 (reçue + vérifiée) et BLE2600219 (reçue) → retirées le 2026-04-08
 export const ENGAGEMENTS = [
-  // FAE2600339 — En route
-  { facture:'FAE2600339', ref:'77258-0701', produit:'ROCKET WING MIDLENGTH', taille:"6'0", qte:2, statut:'En route' },
-  { facture:'FAE2600339', ref:'77258-0701', produit:'ROCKET WING MIDLENGTH', taille:"6'2", qte:4, statut:'En route' },
-  { facture:'FAE2600339', ref:'77258-0701', produit:'ROCKET WING MIDLENGTH', taille:"6'4", qte:3, statut:'En route' },
-  { facture:'FAE2600339', ref:'77258-0801', produit:'ROCKET WING CROSSOVER', taille:"5'2", qte:3, statut:'En route' },
-  { facture:'FAE2600339', ref:'77258-0801', produit:'ROCKET WING CROSSOVER', taille:"5'4", qte:4, statut:'En route' },
-  { facture:'FAE2600339', ref:'77258-0801', produit:'ROCKET WING CROSSOVER', taille:"5'6", qte:4, statut:'En route' },
-  { facture:'FAE2600339', ref:'77258-0801', produit:'ROCKET WING CROSSOVER', taille:"5'8", qte:5, statut:'En route' },
-  { facture:'FAE2600339', ref:'77258-0801', produit:'ROCKET WING CROSSOVER', taille:"5'10", qte:4, statut:'En route' },
-  { facture:'FAE2600339', ref:'77258-1101', produit:'ROCKET WING ASC', taille:"5'5", qte:5, statut:'En route' },
+  // FAE2600339 — En route (Dachser DAP Corralejo)
+  // Seuls les articles PAS encore reçus restent ici
+  // Retirés le 2026-04-08 (déjà reçus) : MIDLENGTH, CROSSOVER, ASC 5'5, KEAHI, SPARK, ROCKET FREE DW CARBON 7'0
   { facture:'FAE2600339', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"5'8", qte:2, statut:'En route' },
   { facture:'FAE2600339', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"5'11", qte:4, statut:'En route' },
   { facture:'FAE2600339', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"6'2", qte:4, statut:'En route' },
   { facture:'FAE2600339', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"6'5", qte:3, statut:'En route' },
   { facture:'FAE2600339', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"6'8", qte:4, statut:'En route' },
-  { facture:'FAE2600339', ref:'77268-1402C', produit:'ROCKET FREE DOWNWIND', taille:"7'0", qte:1, statut:'En route' },
-  { facture:'FAE2600339', ref:'77264-0801', produit:'KEAHI PRO SURF', taille:"5'7", qte:2, statut:'En route' },
-  { facture:'FAE2600339', ref:'77264-0801', produit:'KEAHI PRO SURF', taille:"5'9", qte:3, statut:'En route' },
-  { facture:'FAE2600339', ref:'77263-0602', produit:'SPARK', taille:'134×39.5', qte:3, statut:'En route' },
-  { facture:'FAE2600339', ref:'77263-0602', produit:'SPARK', taille:'136×41', qte:3, statut:'En route' },
-  { facture:'FAE2600339', ref:'77263-0602', produit:'SPARK', taille:'138×42', qte:3, statut:'En route' },
 
   // PLE2600580 — Proformé
   { facture:'PLE2600580', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"5'2", qte:2, statut:'Proformé' },
