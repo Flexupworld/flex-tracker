@@ -360,9 +360,15 @@ export default function App() {
   const totalEnRoute = livraisons.filter(l=>l.statut==='En route'||l.statut==='En cours de vérification').reduce((s,l)=>s+(l.montant_ht||0),0)
   const totalProforma = livraisons.filter(l=>l.statut==='Proformé').reduce((s,l)=>s+(l.montant_ht||0),0)
   const totalAllLivraisons = totalFA + totalEnRoute + totalProforma
-  const totalUnitsLivrees = livraisons.reduce((s,l)=>s+(l.qte_totale||0),0)
-  const avgUnitPrice = totalUnitsLivrees>0 ? totalAllLivraisons/totalUnitsLivrees : 0
-  const backlogValue = Math.round(totalReliquat * avgUnitPrice)
+  const backlogValue = Math.round(commandes.reduce((s, c) => {
+    const eng = engMap[`${c.ref}||${c.taille}`] || 0
+    const rel = Math.max(0, c.qte_commandee - c.qte_livree - eng)
+    return s + rel * (c.prix_u || 0)
+  }, 0))
+  const totalReliquatAll = commandes.reduce((s, c) => {
+    const eng = engMap[`${c.ref}||${c.taille}`] || 0
+    return s + Math.max(0, c.qte_commandee - c.qte_livree - eng)
+  }, 0)
   const totalPreOrder = totalAllLivraisons + backlogValue
 
   if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',color:'#555'}}>Chargement...</div>
@@ -796,7 +802,7 @@ export default function App() {
                 <td style={{padding:'10px',fontWeight:500,color:'#ff4757'}}><label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}><input type='checkbox' checked={includeBacklog} onChange={e=>setIncludeBacklog(e.target.checked)} style={{cursor:'pointer'}}/> Backlog (not yet invoiced)</label></td>
                 <td style={{padding:'10px',textAlign:'right',color:'#ff4757'}}>{backlogValue.toLocaleString('fr-FR',{maximumFractionDigits:0})} €</td>
                 <td style={{padding:'10px',textAlign:'right',color:'#888'}}>{totalPreOrder>0?Math.round((backlogValue/totalPreOrder)*100):0}%</td>
-                <td style={{padding:'10px',color:'#888',fontSize:11}}>{totalReliquat.toLocaleString()} units × ~{Math.round(avgUnitPrice).toLocaleString()} €/unit</td>
+                <td style={{padding:'10px',color:'#888',fontSize:11}}>{totalReliquatAll.toLocaleString()} units · Prix Canaries HT</td>
               </tr>
             </tbody>
             <tfoot>
