@@ -32,6 +32,21 @@ export const SEED_LIVRAISONS = [
     saison: 'SS26',
     notes: 'En transit vers Corralejo'
   },
+  {
+    facture: 'FAE2600481',
+    type: 'Facture',
+    date_emission: '',
+    date_livraison: '',
+    transport: 'Dachser DAP Corralejo',
+    entite: 'CS_SL',
+    fournisseur: 'F.one',
+    nb_lignes: 1,
+    qte_totale: 1,
+    montant_ht: 0,
+    statut: 'En route',
+    saison: 'SS26',
+    notes: 'Rocket Free DW 7\'0 — en transit'
+  },
   // ── PROFORMAS ACCEPTÉES — EN ATTENTE D\'EXPÉDITION ─────────────
   {
     facture: 'PLE2600601',
@@ -69,8 +84,10 @@ export const SEED_LIVRAISONS = [
 // Ces qtés s'ajoutent aux qte_livree pour calculer le vrai reliquat
 // FAE2600316 (reçue + vérifiée) et BLE2600219 (reçue) → retirées le 2026-04-08
 export const ENGAGEMENTS = [
-  // FAE2600339 — En route (Dachser DAP Corralejo)
-  // Tout reçu ou non en transit — retirés le 2026-04-08
+  // FAE2600481 — En route (Dachser DAP Corralejo)
+  { facture:'FAE2600481', ref:'77268-1403', produit:'ROCKET FREE DOWNWIND', taille:"7'0", qte:1, statut:'En route' },
+
+  // FAE2600339 — Tout reçu ou non en transit — retirés le 2026-04-08
 
   // PLE2600580 — Proformé
   { facture:'PLE2600580', ref:'77268-1303', produit:'ROCKET FREE SURF', taille:"5'2", qte:2, statut:'Proformé' },
