@@ -328,6 +328,12 @@ export default function App() {
     setExpanded(prev => { const n=new Set(prev); n.has(key)?n.delete(key):n.add(key); return n })
   }
 
+  async function toggleCrossCheck(livraison) {
+    const newVal = !livraison.cross_checked
+    await supabase.from('livraisons').update({ cross_checked: newVal }).eq('id', livraison.id)
+    setLivraisons(prev => prev.map(l => l.id === livraison.id ? {...l, cross_checked: newVal} : l))
+  }
+
   const filtered = commandes.filter(c => {
     const rel = c.qte_commandee - c.qte_livree
     const eng = engMap[`${c.ref}||${c.taille}`] || 0
@@ -562,7 +568,7 @@ export default function App() {
               </thead>
               <tbody>
                 {livraisons.map((l,i)=>(
-                  <tr key={i} style={{borderBottom:'1px solid #1a1a1a'}}>
+                  <tr key={i} style={{borderBottom:'1px solid #1a1a1a', background: l.cross_checked ? '#0a1f0e' : 'transparent'}}>
                     <td style={{padding:'12px 10px',fontWeight:600,color:'#fff',fontFamily:'monospace',fontSize:12}}>{l.facture}</td>
                     <td style={{padding:'12px 10px',fontSize:11,color:'#666'}}>{l.type}</td>
                     <td style={{padding:'12px 10px',fontSize:11,color:'#888'}}>{l.date_livraison?new Date(l.date_livraison).toLocaleDateString('fr-FR'):'—'}</td>
@@ -571,7 +577,21 @@ export default function App() {
                     <td style={{padding:'12px 10px',textAlign:'right',color:'#ddd'}}>{l.montant_ht?.toLocaleString('fr-FR',{minimumFractionDigits:2})} €</td>
                     <td style={{padding:'12px 10px'}}><Badge status={l.statut}/></td>
                     <td style={{padding:'12px 10px',fontSize:11,color:'#555',maxWidth:200}}>{l.notes}</td>
-                    <td style={{padding:'8px 10px',whiteSpace:'nowrap'}}>
+                    <td style={{padding:'8px 10px',whiteSpace:'nowrap',display:'flex',alignItems:'center',gap:8,paddingTop:12}}>
+                      <button
+                        onClick={() => toggleCrossCheck(l)}
+                        title={l.cross_checked ? 'Mark as pending' : 'Mark as fully logged'}
+                        style={{
+                          width:28, height:28, borderRadius:6, fontSize:15, cursor:'pointer',
+                          background: l.cross_checked ? '#0d3320' : '#1e1e1e',
+                          border: `1px solid ${l.cross_checked ? '#2ed573' : '#333'}`,
+                          color: l.cross_checked ? '#2ed573' : '#444',
+                          display:'flex', alignItems:'center', justifyContent:'center',
+                          flexShrink:0, transition:'all 0.15s'
+                        }}
+                      >
+                        {l.cross_checked ? '✓' : ''}
+                      </button>
                       <button
                         onClick={() => setSaisieModal(l)}
                         style={{
