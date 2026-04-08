@@ -5,7 +5,7 @@ import { SEED_LIVRAISONS, ENGAGEMENTS } from './lib/livraisonsData'
 import * as XLSX from 'xlsx'
 import './App.css'
 
-// ─── Export utilities ─────────────────────────────────────────────────────────
+// ─── Export utilities ────────────────────────────────────────────────────────
 function exportCSV(filename, headers, rows) {
   const escape = v => {
     if (v == null) return ''
@@ -34,24 +34,24 @@ function ExportBar({ label, onCSV, onXLSX }) {
   return (
     <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:10 }}>
       <span style={{ fontSize:11, color:'#444', marginRight:4 }}>{label}</span>
-      <button onClick={onCSV} title="Export as CSV" style={{
+      <button onClick={onCSV} title="Exporter en CSV" style={{
         padding:'5px 12px', borderRadius:6, fontSize:11, cursor:'pointer',
         background:'#1a2a1a', border:'1px solid #2a4a2a', color:'#2ed573', fontWeight:500
       }}>⬇ CSV</button>
-      <button onClick={onXLSX} title="Export as Excel" style={{
+      <button onClick={onXLSX} title="Exporter en Excel" style={{
         padding:'5px 12px', borderRadius:6, fontSize:11, cursor:'pointer',
         background:'#1a2a1a', border:'1px solid #2a4a2a', color:'#2ed573', fontWeight:500
       }}>⬇ XLSX</button>
     </div>
   )
 }
-// ──────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 
 const STATUT_LIVRAISON = {
   'Proformé':              { icon:'📋', color:'#4a9eff', bg:'#0a1a2b', border:'#102840' },
   'En route':              { icon:'🚚', color:'#ff9f43', bg:'#2b1e0a', border:'#4a3010' },
   'En cours de vérification': { icon:'🔍', color:'#f9ca24', bg:'#2b2a0a', border:'#4a4010' },
-  'Received':           { icon:'✅', color:'#2ed573', bg:'#0d2b1a', border:'#1a4a2a' },
+  'Réceptionné':           { icon:'✅', color:'#2ed573', bg:'#0d2b1a', border:'#1a4a2a' },
   'Retard':                { icon:'⚠️', color:'#ff4757', bg:'#2b0a0a', border:'#4a1010' },
 }
 
@@ -70,7 +70,7 @@ function ProgressBar({ liv, eng, cmd }) {
         <div style={{ position:'absolute', left:0, top:0, height:'100%', width:`${pLiv}%`, background:'#2ed573', borderRadius:3 }} />
       </div>
       <div style={{ fontSize:10, color:'#555' }}>
-        {pLiv}% received{pEng > pLiv ? ` · ${pEng}% engagé` : ''}
+        {pLiv}% réceptionné{pEng > pLiv ? ` · ${pEng}% engagé` : ''}
       </div>
     </div>
   )
@@ -112,6 +112,7 @@ function SaisieModal({ livraison, commandes, engMap, onClose, onSave }) {
   }, [commandes, search])
 
   function setQty(id, val) {
+    // only allow non-negative integers
     if (val === '' || /^\d+$/.test(val)) {
       setLignes(prev => ({ ...prev, [id]: val }))
     }
@@ -123,9 +124,12 @@ function SaisieModal({ livraison, commandes, engMap, onClose, onSave }) {
   async function handleSave() {
     const updates = commandes
       .filter(c => parseInt(lignes[c.id]) > 0)
-      .map(c => ({ id: c.id, newQty: c.qte_livree + parseInt(lignes[c.id]) }))
+      .map(c => ({ id: c.id, delta: parseInt(lignes[c.id]), newQty: c.qte_livree + parseInt(lignes[c.id]) }))
 
-    if (updates.length === 0) { onClose(); return }
+    if (updates.length === 0) {
+      onClose()
+      return
+    }
 
     setSaving(true)
     setSaveError(null)
@@ -145,7 +149,7 @@ function SaisieModal({ livraison, commandes, engMap, onClose, onSave }) {
       return
     }
 
-    // Auto-transition livraison from 'En route' to 'En cours de vérification'
+    // Also update the livraison statut to "En cours de vérification" if still "En route"
     if (livraison.statut === 'En route') {
       await supabase
         .from('livraisons')
@@ -172,7 +176,7 @@ function SaisieModal({ livraison, commandes, engMap, onClose, onSave }) {
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
             <div>
               <div style={{ fontSize:16, fontWeight:600, color:'#fff' }}>
-                📝 Log delivery — {livraison.facture}
+                📝 Saisir livraison — {livraison.facture}
               </div>
               <div style={{ fontSize:12, color:'#555', marginTop:4 }}>
                 {livraison.entite} · {livraison.type} · {livraison.date_livraison ? new Date(livraison.date_livraison).toLocaleDateString('fr-FR') : '—'}
@@ -182,9 +186,9 @@ function SaisieModal({ livraison, commandes, engMap, onClose, onSave }) {
             <button onClick={onClose} style={{ background:'none', border:'none', color:'#555', fontSize:20, cursor:'pointer', padding:'4px 8px' }}>✕</button>
           </div>
           <div style={{ marginTop:12, padding:'10px 14px', background:'#1a1a1a', borderRadius:8, border:'1px solid #252525', fontSize:12, color:'#888', lineHeight:1.5 }}>
-            ⚠️ Enter quantities <strong style={{color:'#ddd'}}>received in this specific delivery</strong>.
-            These quantities will be <strong style={{color:'#ff9f43'}}>added</strong> to the current received total for each item.
-            Leave at <strong style={{color:'#ddd'}}>0</strong> for items not included in this invoice.
+            ⚠️ Entrez les quantités <strong style={{color:'#ddd'}}>reçues dans cette livraison spécifique</strong>.
+            Ces quantités seront <strong style={{color:'#ff9f43'}}>ajoutées</strong> au réceptionné actuel de chaque article.
+            Laissez à <strong style={{color:'#ddd'}}>0</strong> les articles non livrés dans cette facture.
           </div>
         </div>
 
@@ -193,7 +197,7 @@ function SaisieModal({ livraison, commandes, engMap, onClose, onSave }) {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Filter by item, ref., size..."
+            placeholder="Filtrer par article, réf., taille..."
             style={{ width:'100%', boxSizing:'border-box' }}
             autoFocus
           />
@@ -204,7 +208,7 @@ function SaisieModal({ livraison, commandes, engMap, onClose, onSave }) {
           <table style={{ width:'100%', borderCollapse:'collapse', fontSize:12 }}>
             <thead style={{ position:'sticky', top:0, background:'#141414', zIndex:1 }}>
               <tr>
-                {['Item', 'Size', 'Ordered', 'Received', 'Backlog', 'Qty in this delivery'].map((h, i) => (
+                {['Article', 'Taille', 'Commandé', 'Réceptionné', 'Reliquat', 'Reçu dans cette livraison'].map((h, i) => (
                   <th key={i} style={{ textAlign: i >= 2 ? 'right' : 'left', padding:'8px 12px', color:'#444', borderBottom:'1px solid #1e1e1e', fontSize:10, textTransform:'uppercase', letterSpacing:'0.06em', whiteSpace:'nowrap' }}>{h}</th>
                 ))}
               </tr>
@@ -250,16 +254,18 @@ function SaisieModal({ livraison, commandes, engMap, onClose, onSave }) {
         <div style={{ padding:'16px 24px', borderTop:'1px solid #1e1e1e', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
           <div style={{ fontSize:12, color: nbLignesSaisies > 0 ? '#2ed573' : '#555' }}>
             {nbLignesSaisies > 0
-              ? `✓ ${nbLignesSaisies} item${nbLignesSaisies > 1 ? 's' : ''} · ${totalSaisi} unit${totalSaisi > 1 ? 's' : ''} to save`
-              : 'No quantities entered'
+              ? `✓ ${nbLignesSaisies} article${nbLignesSaisies > 1 ? 's' : ''} · ${totalSaisi} unité${totalSaisi > 1 ? 's' : ''} à enregistrer`
+              : 'Aucune quantité saisie'
             }
           </div>
           {saveError && (
-            <div style={{ fontSize:11, color:'#ff4757', flex:1, textAlign:'center' }}>Error: {saveError}</div>
+            <div style={{ fontSize:11, color:'#ff4757', flex:1, textAlign:'center' }}>
+              Erreur: {saveError}
+            </div>
           )}
           <div style={{ display:'flex', gap:8 }}>
             <button onClick={onClose} disabled={saving} style={{ padding:'8px 16px', borderRadius:8, border:'1px solid #333', background:'transparent', color:'#888', cursor:'pointer', fontSize:13 }}>
-              Cancel
+              Annuler
             </button>
             <button
               onClick={handleSave}
@@ -271,7 +277,7 @@ function SaisieModal({ livraison, commandes, engMap, onClose, onSave }) {
                 cursor: saving ? 'wait' : 'pointer', fontSize:13, fontWeight:500
               }}
             >
-              {saving ? 'Saving...' : nbLignesSaisies > 0 ? `✓ Save (${totalSaisi} units)` : 'Close'}
+              {saving ? 'Enregistrement...' : nbLignesSaisies > 0 ? `✓ Enregistrer (${totalSaisi} unités)` : 'Fermer'}
             </button>
           </div>
         </div>
@@ -286,11 +292,10 @@ export default function App() {
   const [livraisons, setLivraisons] = useState([])
   const [loading, setLoading] = useState(true)
   const [seeding, setSeeding] = useState(false)
-  const [tab, setTab] = useState('orders')
-  const [includeBacklog, setIncludeBacklog] = useState(true)
+  const [tab, setTab] = useState('commandes')
   const [search, setSearch] = useState('')
   const [filtCat, setFiltCat] = useState('all')
-  const [filtStatus, setFiltStatus] = useState('all')
+  const [filtStatut, setFiltStatut] = useState('all')
   const [expanded, setExpanded] = useState(new Set())
   const [saisieModal, setSaisieModal] = useState(null) // livraison object or null
 
@@ -328,23 +333,17 @@ export default function App() {
     setExpanded(prev => { const n=new Set(prev); n.has(key)?n.delete(key):n.add(key); return n })
   }
 
-  async function toggleCrossCheck(livraison) {
-    const newVal = !livraison.cross_checked
-    await supabase.from('livraisons').update({ cross_checked: newVal }).eq('id', livraison.id)
-    setLivraisons(prev => prev.map(l => l.id === livraison.id ? {...l, cross_checked: newVal} : l))
-  }
-
   const filtered = commandes.filter(c => {
     const rel = c.qte_commandee - c.qte_livree
     const eng = engMap[`${c.ref}||${c.taille}`] || 0
     const vraiReliquat = Math.max(0, rel - eng)
     const matchSearch = !search || c.produit?.toLowerCase().includes(search.toLowerCase()) || c.ref?.toLowerCase().includes(search.toLowerCase()) || c.bc?.toLowerCase().includes(search.toLowerCase())
     const matchCat = filtCat === 'all' || c.categorie === filtCat
-    const matchSt = filtStatus === 'all' ||
-      (filtStatus === 'Soldé' && rel <= 0) ||
-      (filtStatus === 'In Transit' && rel > 0 && vraiReliquat === 0) ||
-      (filtStatus === 'Partiel' && vraiReliquat > 0 && c.qte_livree > 0) ||
-      (filtStatus === 'Ouvert' && vraiReliquat > 0 && c.qte_livree === 0)
+    const matchSt = filtStatut === 'all' ||
+      (filtStatut === 'Soldé' && rel <= 0) ||
+      (filtStatut === 'Engagé' && rel > 0 && vraiReliquat === 0) ||
+      (filtStatut === 'Partiel' && vraiReliquat > 0 && c.qte_livree > 0) ||
+      (filtStatut === 'Ouvert' && vraiReliquat > 0 && c.qte_livree === 0)
     return matchSearch && matchCat && matchSt
   })
 
@@ -353,17 +352,11 @@ export default function App() {
 
   const totalCmd = filtered.reduce((s,c)=>s+c.qte_commandee,0)
   const totalLiv = filtered.reduce((s,c)=>s+c.qte_livree,0)
-  const seenEng = new Set()
-  const totalEng = filtered.reduce((s,r)=>{const k=`${r.ref}||${r.taille}`;if(seenEng.has(k))return s;seenEng.add(k);return s+(engMap[k]||0)},0)
+  const totalEng = filtered.reduce((s,c)=>s+(engMap[`${c.ref}||${c.taille}`]||0),0)
   const totalReliquat = Math.max(0, totalCmd - totalLiv - totalEng)
   const totalFA = livraisons.filter(l=>l.statut==='Réceptionné'||l.statut==='En cours de vérification').reduce((s,l)=>s+(l.montant_ht||0),0)
   const totalEnRoute = livraisons.filter(l=>l.statut==='En route'||l.statut==='En cours de vérification').reduce((s,l)=>s+(l.montant_ht||0),0)
   const totalProforma = livraisons.filter(l=>l.statut==='Proformé').reduce((s,l)=>s+(l.montant_ht||0),0)
-  const totalAllLivraisons = totalFA + totalEnRoute + totalProforma
-  const totalUnitsLivrees = livraisons.reduce((s,l)=>s+(l.qte_totale||0),0)
-  const avgUnitPrice = totalUnitsLivrees>0 ? totalAllLivraisons/totalUnitsLivrees : 0
-  const backlogValue = Math.round(totalReliquat * avgUnitPrice)
-  const totalPreOrder = totalAllLivraisons + backlogValue
 
   if (loading) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',color:'#555'}}>Chargement...</div>
 
@@ -395,14 +388,14 @@ export default function App() {
       {/* Header */}
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,flexWrap:'wrap',gap:10}}>
         <div>
-          <div style={{fontSize:20,fontWeight:500,color:'#fff'}}>Supplier Order Tracking</div>
-          <div style={{fontSize:12,color:'#444',marginTop:3}}>Circular Stream SL · F.one · Season SS26</div>
+          <div style={{fontSize:20,fontWeight:500,color:'#fff'}}>Suivi commandes fournisseurs</div>
+          <div style={{fontSize:12,color:'#444',marginTop:3}}>Circular Stream SL · F.one · Saison SS26</div>
         </div>
         <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
-          <select value={filtStatus} onChange={e=>setFiltStatus(e.target.value)}>
-            <option value="all">All statuses</option>
+          <select value={filtStatut} onChange={e=>setFiltStatut(e.target.value)}>
+            <option value="all">Tous statuts</option>
             <option value="Soldé">Soldé</option>
-            <option value="In Transit">In Transit (reliquat couvert)</option>
+            <option value="Engagé">Engagé (reliquat couvert)</option>
             <option value="Partiel">Partiel</option>
             <option value="Ouvert">Ouvert</option>
           </select>
@@ -415,11 +408,10 @@ export default function App() {
       {/* Metrics */}
       <div style={{display:'flex',gap:10,marginBottom:20,flexWrap:'wrap'}}>
         {[
-          {label:'Invoiced / Verified', value:`${totalFA.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#2ed573'},
-          {label:'In Transit / Verification', value:`${totalEnRoute.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#f9ca24'},
-          {label:'Proforma (Upcoming)', value:`${totalProforma.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#4a9eff'},
-          {label:'True Remaining Backlog', value:`${(totalEnRoute+totalProforma).toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:(totalEnRoute+totalProforma)>0?'#ff4757':'#2ed573'},
-          {label:'Total Pre-Order', value:`${totalPreOrder.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#4a9eff'},
+          {label:'Facturé / vérifié', value:`${totalFA.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#2ed573'},
+          {label:'En route / vérification', value:`${totalEnRoute.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#f9ca24'},
+          {label:'Proformé (à venir)', value:`${totalProforma.toLocaleString('fr-FR',{maximumFractionDigits:0})} €`, color:'#4a9eff'},
+          {label:'Vrai reliquat restant', value:totalReliquat.toLocaleString(), color:totalReliquat>0?'#ff4757':'#2ed573'},
         ].map(m=>(
           <div key={m.label} style={{background:'#1c1c1c',borderRadius:10,padding:'14px 16px',border:'1px solid #222',flex:1,minWidth:150}}>
             <div style={{fontSize:11,color:'#555',marginBottom:8,textTransform:'uppercase',letterSpacing:'0.05em'}}>{m.label}</div>
@@ -430,7 +422,7 @@ export default function App() {
 
       {/* Tabs */}
       <div style={{display:'flex',borderBottom:'1px solid #222',marginBottom:16}}>
-        {['orders','deliveries','backlog','pre-orders','financial'].map(t=>(
+        {['commandes','livraisons','reliquats'].map(t=>(
           <button key={t} onClick={()=>setTab(t)} style={{padding:'9px 18px',fontSize:13,cursor:'pointer',background:'none',border:'none',borderBottom:tab===t?'2px solid #fff':'2px solid transparent',color:tab===t?'#fff':'#555',textTransform:'capitalize'}}>
             {t}
             {t==='livraisons'&&<span style={{display:'inline-block',width:6,height:6,background:'#ff9f43',borderRadius:'50%',marginLeft:5,verticalAlign:'middle'}}/>}
@@ -438,46 +430,46 @@ export default function App() {
         ))}
       </div>
 
-      {/* Tab Orders */}
-      {tab==='orders'&&(
+      {/* Tab Commandes */}
+      {tab==='commandes'&&(
         <>
           <div style={{display:'flex',gap:8,marginBottom:12,flexWrap:'wrap',alignItems:'center'}}>
-            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search item / ref. / PO..." style={{flex:1,minWidth:200}}/>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher article / réf. / BC..." style={{flex:1,minWidth:200}}/>
             <ExportBar
-              label={`${filtered.length} rows`}
+              label={`${filtered.length} lignes`}
               onCSV={() => {
-                const hdrs = ['PO Ref','Ref','Entity','Item','Size','Category','Ordered','Received','In Transit','True Backlog','% Received','Unit Price','Expected Delivery']
+                const hdrs = ['BC','Réf','Entité','Produit','Taille','Catégorie','Commandé','Réceptionné','Engagé','Reliquat net','% Livré','Prix U.','Livraison prévue']
                 const rows = filtered.map(c => {
                   const eng = engMap[`${c.ref}||${c.taille}`] || 0
                   const rel = Math.max(0, c.qte_commandee - c.qte_livree - eng)
                   const pct = c.qte_commandee > 0 ? Math.round(c.qte_livree / c.qte_commandee * 100) : 0
                   return [c.bc, c.ref, c.entite, c.produit, c.taille, c.categorie, c.qte_commandee, c.qte_livree, eng || '', rel, pct + '%', c.prix_u, c.livraison_prevue]
                 })
-                exportCSV(`Orders_SS26_${new Date().toISOString().slice(0,10)}.csv`, hdrs, rows)
+                exportCSV(`Commandes_SS26_${new Date().toISOString().slice(0,10)}.csv`, hdrs, rows)
               }}
               onXLSX={() => {
-                const hdrs = ['PO Ref','Ref','Entity','Item','Size','Category','Ordered','Received','In Transit','True Backlog','% Received','Unit Price','Expected Delivery']
+                const hdrs = ['BC','Réf','Entité','Produit','Taille','Catégorie','Commandé','Réceptionné','Engagé','Reliquat net','% Livré','Prix U.','Livraison prévue']
                 const rows = filtered.map(c => {
                   const eng = engMap[`${c.ref}||${c.taille}`] || 0
                   const rel = Math.max(0, c.qte_commandee - c.qte_livree - eng)
                   const pct = c.qte_commandee > 0 ? Math.round(c.qte_livree / c.qte_commandee * 100) : 0
                   return [c.bc, c.ref, c.entite, c.produit, c.taille, c.categorie, c.qte_commandee, c.qte_livree, eng || 0, rel, pct / 100, c.prix_u, c.livraison_prevue]
                 })
-                exportXLSX(`Orders_SS26_${new Date().toISOString().slice(0,10)}.xlsx`, 'Orders', hdrs, rows)
+                exportXLSX(`Commandes_SS26_${new Date().toISOString().slice(0,10)}.xlsx`, 'Commandes', hdrs, rows)
               }}
             />
           </div>
           <div style={{display:'flex',gap:5,flexWrap:'wrap',marginBottom:14}}>
             {['all',...cats].map(c=>(
               <button key={c} onClick={()=>setFiltCat(c)} style={{padding:'4px 11px',borderRadius:20,fontSize:11,cursor:'pointer',border:`1px solid ${filtCat===c?'#555':'#333'}`,background:filtCat===c?'#2a2a2a':'transparent',color:filtCat===c?'#ddd':'#555'}}>
-                {c==='all'?'All':c}
+                {c==='all'?'Toutes':c}
               </button>
             ))}
           </div>
           <div style={{overflowX:'auto'}}>
             <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
               <thead>
-                <tr>{['','PO Ref','Supplier','Item','Category','Ordered','Received','In Transit','True Backlog','Progress'].map((h,i)=>(
+                <tr>{['','Réf BC','Fournisseur','Article','Catégorie','Commandé','Réceptionné','Engagé','Vrai reliquat','Avancement'].map((h,i)=>(
                   <th key={i} style={{textAlign:i>=5?'right':'left',padding:'8px 10px',color:'#444',borderBottom:'1px solid #1e1e1e',fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',whiteSpace:'nowrap'}}>{h}</th>
                 ))}</tr>
               </thead>
@@ -536,39 +528,39 @@ export default function App() {
         </>
       )}
 
-      {/* Tab Deliveries */}
-      {tab==='deliveries'&&(
+      {/* Tab Livraisons */}
+      {tab==='livraisons'&&(
         <>
           <div style={{display:'flex',justifyContent:'flex-end',marginBottom:6}}>
             <ExportBar
-              label={`${livraisons.length} deliveries`}
+              label={`${livraisons.length} livraisons`}
               onCSV={() => {
-                const hdrs = ['Ref','Type','Date','Entity','Qty','Amount HT','Status','Notes']
+                const hdrs = ['Réf','Type','Date livraison','Entité','Qté','Montant HT','Statut','Notes']
                 const rows = livraisons.map(l => [l.facture, l.type, l.date_livraison, l.entite, l.qte_totale, l.montant_ht, l.statut, l.notes])
-                exportCSV(`Deliveries_SS26_${new Date().toISOString().slice(0,10)}.csv`, hdrs, rows)
+                exportCSV(`Livraisons_SS26_${new Date().toISOString().slice(0,10)}.csv`, hdrs, rows)
               }}
               onXLSX={() => {
-                const hdrs = ['Ref','Type','Date','Entity','Qty','Amount HT','Status','Notes']
+                const hdrs = ['Réf','Type','Date livraison','Entité','Qté','Montant HT','Statut','Notes']
                 const rows = livraisons.map(l => [l.facture, l.type, l.date_livraison, l.entite, l.qte_totale, l.montant_ht, l.statut, l.notes])
-                exportXLSX(`Deliveries_SS26_${new Date().toISOString().slice(0,10)}.xlsx`, 'Deliveries', hdrs, rows)
+                exportXLSX(`Livraisons_SS26_${new Date().toISOString().slice(0,10)}.xlsx`, 'Livraisons', hdrs, rows)
               }}
             />
           </div>
           {/* Info banner */}
           <div style={{ marginBottom:14, padding:'10px 16px', background:'#1a1a1a', borderRadius:8, border:'1px solid #252525', fontSize:12, color:'#666', display:'flex', alignItems:'center', gap:8 }}>
             <span style={{color:'#ff9f43'}}>📝</span>
-            <span>Click <strong style={{color:'#ddd'}}>Log delivery</strong> to record the quantities received from an invoice and automatically update the received totals.</span>
+            <span>Cliquez sur <strong style={{color:'#ddd'}}>Saisir les lignes</strong> pour enregistrer les quantités reçues d'une livraison et mettre à jour le réceptionné automatiquement.</span>
           </div>
           <div style={{overflowX:'auto'}}>
             <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
               <thead>
-                <tr>{['Réf','Type','Date prévu','Entité','Qté','Montant HT','Status','Notes',''].map((h,i)=>(
+                <tr>{['Réf','Type','Date prévu','Entité','Qté','Montant HT','Statut','Notes',''].map((h,i)=>(
                   <th key={i} style={{textAlign:i>=4&&i<=5?'right':'left',padding:'8px 10px',color:'#444',borderBottom:'1px solid #1e1e1e',fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',whiteSpace:'nowrap'}}>{h}</th>
                 ))}</tr>
               </thead>
               <tbody>
                 {livraisons.map((l,i)=>(
-                  <tr key={i} style={{borderBottom:'1px solid #1a1a1a', background: l.cross_checked ? '#0a1f0e' : 'transparent'}}>
+                  <tr key={i} style={{borderBottom:'1px solid #1a1a1a'}}>
                     <td style={{padding:'12px 10px',fontWeight:600,color:'#fff',fontFamily:'monospace',fontSize:12}}>{l.facture}</td>
                     <td style={{padding:'12px 10px',fontSize:11,color:'#666'}}>{l.type}</td>
                     <td style={{padding:'12px 10px',fontSize:11,color:'#888'}}>{l.date_livraison?new Date(l.date_livraison).toLocaleDateString('fr-FR'):'—'}</td>
@@ -577,21 +569,7 @@ export default function App() {
                     <td style={{padding:'12px 10px',textAlign:'right',color:'#ddd'}}>{l.montant_ht?.toLocaleString('fr-FR',{minimumFractionDigits:2})} €</td>
                     <td style={{padding:'12px 10px'}}><Badge status={l.statut}/></td>
                     <td style={{padding:'12px 10px',fontSize:11,color:'#555',maxWidth:200}}>{l.notes}</td>
-                    <td style={{padding:'8px 10px',whiteSpace:'nowrap',display:'flex',alignItems:'center',gap:8,paddingTop:12}}>
-                      <button
-                        onClick={() => toggleCrossCheck(l)}
-                        title={l.cross_checked ? 'Mark as pending' : 'Mark as fully logged'}
-                        style={{
-                          width:28, height:28, borderRadius:6, fontSize:15, cursor:'pointer',
-                          background: l.cross_checked ? '#0d3320' : '#1e1e1e',
-                          border: `1px solid ${l.cross_checked ? '#2ed573' : '#333'}`,
-                          color: l.cross_checked ? '#2ed573' : '#444',
-                          display:'flex', alignItems:'center', justifyContent:'center',
-                          flexShrink:0, transition:'all 0.15s'
-                        }}
-                      >
-                        {l.cross_checked ? '✓' : ''}
-                      </button>
+                    <td style={{padding:'8px 10px',whiteSpace:'nowrap'}}>
                       <button
                         onClick={() => setSaisieModal(l)}
                         style={{
@@ -600,7 +578,7 @@ export default function App() {
                           fontWeight:500, whiteSpace:'nowrap'
                         }}
                       >
-                        📝 Log delivery
+                        📝 Saisir les lignes
                       </button>
                     </td>
                   </tr>
@@ -619,13 +597,13 @@ export default function App() {
         </>
       )}
 
-      {/* Tab Backlog */}
-      {tab==='backlog'&&(
+      {/* Tab Reliquats */}
+      {tab==='reliquats'&&(
         <>
           <div style={{display:'flex',justifyContent:'flex-end',marginBottom:10}}>
             {(() => {
-              const backlogRows = groups.filter(g=>Math.max(0,g.qte_commandee-g.qte_livree-g.qte_engagee)>0)
-              const hdrs = ['PO Ref','Ref','Item','Category','Ordered','Received','In Transit','True Backlog']
+              const relRows = groups.filter(g=>Math.max(0,g.qte_commandee-g.qte_livree-g.qte_engagee)>0)
+              const hdrs = ['BC','Réf','Produit','Catégorie','Commandé','Réceptionné','Engagé','Reliquat net']
               const buildRows = (flat) => flat.flatMap(g => {
                 const rel = Math.max(0,g.qte_commandee-g.qte_livree-g.qte_engagee)
                 const mainRow = [g.bc, g.ref, g.produit, g.categorie, g.qte_commandee, g.qte_livree, g.qte_engagee||0, rel]
@@ -635,9 +613,9 @@ export default function App() {
               })
               return (
                 <ExportBar
-                  label={`${backlogRows.length} items`}
-                  onCSV={() => exportCSV(`Backlog_SS26_${new Date().toISOString().slice(0,10)}.csv`, hdrs, buildRows(backlogRows))}
-                  onXLSX={() => exportXLSX(`Backlog_SS26_${new Date().toISOString().slice(0,10)}.xlsx`, 'Backlog', hdrs, buildRows(backlogRows))}
+                  label={`${relRows.length} articles`}
+                  onCSV={() => exportCSV(`Reliquats_SS26_${new Date().toISOString().slice(0,10)}.csv`, hdrs, buildRows(relRows))}
+                  onXLSX={() => exportXLSX(`Reliquats_SS26_${new Date().toISOString().slice(0,10)}.xlsx`, 'Reliquats', hdrs, buildRows(relRows))}
                 />
               )
             })()}
@@ -645,7 +623,7 @@ export default function App() {
           <div style={{overflowX:'auto'}}>
           <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
             <thead>
-              <tr>{['','PO Ref','Item','Category','Ordered','Received','In Transit','True Backlog'].map((h,i)=>(
+              <tr>{['','Réf BC','Article','Catégorie','Commandé','Réceptionné','Engagé','Vrai reliquat'].map((h,i)=>(
                 <th key={i} style={{textAlign:i>=4?'right':'left',padding:'8px 10px',color:'#444',borderBottom:'1px solid #1e1e1e',fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',whiteSpace:'nowrap'}}>{h}</th>
               ))}</tr>
             </thead>
@@ -654,7 +632,7 @@ export default function App() {
                 const key=`rel-${g.bc}-${g.ref}-${g.produit}`
                 const isOpen=expanded.has(key)
                 const vraiRel=Math.max(0,g.qte_commandee-g.qte_livree-g.qte_engagee)
-                const hasMultiple=g.rows.filter(r=>Math.max(0,r.qte_commandee-r.qte_livree-(engMap[`${r.ref}||${r.taille}`]||0))>0).length>1
+                const hasMultiple=g.rows.length>1
                 return [
                   <tr key={key} onClick={()=>hasMultiple&&toggleExpand(key)}
                     style={{borderBottom:isOpen?'1px solid #2a2a2a':'1px solid #1a1a1a',cursor:hasMultiple?'pointer':'default',background:isOpen?'#181818':'transparent'}}
@@ -672,7 +650,7 @@ export default function App() {
                     <td style={{padding:'10px 10px',textAlign:'right',color:'#ff9f43'}}>{g.qte_engagee||'—'}</td>
                     <td style={{padding:'10px 10px',textAlign:'right',fontWeight:500,color:'#ff4757'}}>{vraiRel}</td>
                   </tr>,
-                  ...(isOpen?g.rows.filter(r=>Math.max(0,r.qte_commandee-r.qte_livree-(engMap[`${r.ref}||${r.taille}`]||0))>0).map((r,ri)=>{
+                  ...(isOpen?g.rows.map((r,ri)=>{
                     const rEng=engMap[`${r.ref}||${r.taille}`]||0
                     const rRel=Math.max(0,r.qte_commandee-r.qte_livree-rEng)
                     return(
@@ -693,122 +671,13 @@ export default function App() {
             </tbody>
             <tfoot>
               <tr style={{borderTop:'1px solid #333'}}>
-                <td colSpan={7} style={{padding:'12px 10px',fontSize:11,color:'#555'}}>True Backlog total (hors engagements)</td>
+                <td colSpan={7} style={{padding:'12px 10px',fontSize:11,color:'#555'}}>Vrai reliquat total (hors engagements)</td>
                 <td style={{padding:'12px 10px',textAlign:'right',fontWeight:500,color:'#ff4757'}}>{totalReliquat.toLocaleString()}</td>
               </tr>
             </tfoot>
           </table>
           </div>
         </>
-      )}
-
-      {tab==='pre-orders' && (
-        <div>
-          <div style={{marginBottom:16,color:'#888',fontSize:13}}>Pre-order fulfillment by category - SS26</div>
-          <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
-            <thead>
-              <tr style={{borderBottom:'1px solid #333',color:'#888'}}>
-                <th style={{textAlign:'left',padding:'8px 10px'}}>Category</th>
-                <th style={{textAlign:'right',padding:'8px 10px'}}>Ordered</th>
-                <th style={{textAlign:'right',padding:'8px 10px'}}>Received</th>
-                <th style={{textAlign:'right',padding:'8px 10px'}}>In Transit</th>
-                <th style={{textAlign:'right',padding:'8px 10px'}}>Remaining</th>
-                <th style={{padding:'8px 10px',minWidth:140}}>Fulfillment</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(
-                commandes.reduce((acc,r)=>{
-                  const cat=r.categorie||'Other'
-                  if(!acc[cat]) acc[cat]={cmd:0,liv:0,eng:0}
-                  acc[cat].cmd+=(r.qte_commandee||0)
-                  acc[cat].liv+=(r.qte_livree||0)
-                  acc[cat].eng+=(engMap[`${r.ref}||${r.taille}`]||0)
-                  return acc
-                },{})
-              ).sort(([a],[b])=>a.localeCompare(b)).map(([cat,g])=>{
-                const remaining=Math.max(0,g.cmd-g.liv-g.eng)
-                const pct=g.cmd>0?Math.round((g.liv/g.cmd)*100):0
-                return (
-                  <tr key={cat} style={{borderBottom:'1px solid #1a1a1a'}}>
-                    <td style={{padding:'10px',fontWeight:500}}>{cat}</td>
-                    <td style={{padding:'10px',textAlign:'right'}}>{g.cmd.toLocaleString()}</td>
-                    <td style={{padding:'10px',textAlign:'right',color:'#2ed573'}}>{g.liv.toLocaleString()}</td>
-                    <td style={{padding:'10px',textAlign:'right',color:'#ff9f43'}}>{g.eng.toLocaleString()}</td>
-                    <td style={{padding:'10px',textAlign:'right',color:'#ff4757'}}>{remaining.toLocaleString()}</td>
-                    <td style={{padding:'10px'}}>
-                      <div style={{background:'#222',borderRadius:4,height:8,overflow:'hidden'}}>
-                        <div style={{background:'#2ed573',height:'100%',width:pct+'%'}}/>
-                      </div>
-                      <span style={{fontSize:11,color:'#888',marginTop:3,display:'block'}}>{pct}% received</span>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-            <tfoot>
-              <tr style={{borderTop:'1px solid #333'}}>
-                <td style={{padding:'12px 10px',fontWeight:600}}>TOTAL</td>
-                <td style={{padding:'12px 10px',textAlign:'right',fontWeight:600}}>{totalCmd.toLocaleString()}</td>
-                <td style={{padding:'12px 10px',textAlign:'right',fontWeight:600,color:'#2ed573'}}>{totalLiv.toLocaleString()}</td>
-                <td style={{padding:'12px 10px',textAlign:'right',fontWeight:600,color:'#ff9f43'}}>{totalEng.toLocaleString()}</td>
-                <td style={{padding:'12px 10px',textAlign:'right',fontWeight:600,color:'#ff4757'}}>{totalReliquat.toLocaleString()}</td>
-                <td/>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      )}
-
-      {tab==='financial' && (
-        <div>
-          <div style={{marginBottom:16,color:'#888',fontSize:13}}>Financial summary - F-ONE SS26 order</div>
-          <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
-            <thead>
-              <tr style={{borderBottom:'1px solid #333',color:'#888'}}>
-                <th style={{textAlign:'left',padding:'8px 10px'}}>Line item</th>
-                <th style={{textAlign:'right',padding:'8px 10px'}}>Amount</th>
-                <th style={{textAlign:'right',padding:'8px 10px'}}>Share</th>
-                <th style={{padding:'8px 10px',minWidth:160}}>Progress</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                {label:'Invoiced / Received',amount:totalFA,color:'#2ed573'},
-                {label:'In Transit',amount:totalEnRoute,color:'#ff9f43'},
-                {label:'Proforma (Upcoming)',amount:totalProforma,color:'#4a9eff'},
-              ].map(row => {
-                const pct = totalAllLivraisons > 0 ? Math.round((row.amount/totalAllLivraisons)*100) : 0
-                return (
-                  <tr key={row.label} style={{borderBottom:'1px solid #1a1a1a'}}>
-                    <td style={{padding:'10px',fontWeight:500}}>{row.label}</td>
-                    <td style={{padding:'10px',textAlign:'right',color:row.color}}>{row.amount.toLocaleString('fr-FR',{maximumFractionDigits:0})} €</td>
-                    <td style={{padding:'10px',textAlign:'right',color:'#888'}}>{pct}%</td>
-                    <td style={{padding:'10px'}}>
-                      <div style={{background:'#222',borderRadius:4,height:8,overflow:'hidden'}}>
-                        <div style={{background:row.color,height:'100%',width:pct+'%'}}/>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-              <tr style={{borderBottom:'1px solid #1a1a1a'}}>
-                <td style={{padding:'10px',fontWeight:500,color:'#ff4757'}}><label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}><input type='checkbox' checked={includeBacklog} onChange={e=>setIncludeBacklog(e.target.checked)} style={{cursor:'pointer'}}/> Backlog (not yet invoiced)</label></td>
-                <td style={{padding:'10px',textAlign:'right',color:'#ff4757'}}>{backlogValue.toLocaleString('fr-FR',{maximumFractionDigits:0})} €</td>
-                <td style={{padding:'10px',textAlign:'right',color:'#888'}}>{totalPreOrder>0?Math.round((backlogValue/totalPreOrder)*100):0}%</td>
-                <td style={{padding:'10px',color:'#888',fontSize:11}}>{totalReliquat.toLocaleString()} units × ~{Math.round(avgUnitPrice).toLocaleString()} €/unit</td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr style={{borderTop:'1px solid #333'}}>
-                <td style={{padding:'12px 10px',fontWeight:600}}>TOTAL PRE-ORDER</td>
-                <td style={{padding:'12px 10px',textAlign:'right',fontWeight:600}}>{(totalAllLivraisons+(includeBacklog?backlogValue:0)).toLocaleString('fr-FR',{maximumFractionDigits:0})} €</td>
-                <td style={{padding:'12px 10px',textAlign:'right',fontWeight:600}}>100%</td>
-                <td/>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
       )}
     </div>
   )
