@@ -1,0 +1,32 @@
+name: Supabase Keepalive
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+    - cron: '0 9 * * 4'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        env:
+          SUPABASE_URL: https://cnhkxjinyaaokwobbphg.supabase.co
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "Secret SUPABASE_ANON_KEY manquant"
+            exit 1
+          fi
+          HTTP_CODE=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/commandes?select=id&limit=1")
+          echo "HTTP $HTTP_CODE"
+          cat /tmp/response.json
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "Ping echoue (HTTP $HTTP_CODE)"
+            exit 1
+          fi
+          echo "Supabase repond - projet maintenu actif"
